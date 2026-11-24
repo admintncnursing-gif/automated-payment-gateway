@@ -181,6 +181,18 @@ Visit `http://localhost:3000` to access the Merchant Portal. Sign in with Google
 
 ## 🌐 Deployment
 
+### Cloudflare
+
+The Cloudflare deployment command is:
+
+```bash
+npx wrangler deploy
+```
+
+Set `SUPABASE_URL` and `SUPABASE_ANON_KEY` as Cloudflare Worker variables. Do not put `SUPABASE_SERVICE_ROLE_KEY` in Cloudflare variables or browser code.
+
+Cloudflare static assets can display the ArchXpay interface, but checkout creation, administrator APIs, and persistent Gmail IMAP verification require the Express Node server. Deploy that server on a persistent host and keep `SUPABASE_SERVICE_ROLE_KEY` available only there.
+
 The merchant portal, approval workflow, and IMAP watcher require the Express server. Deploy the full repository to a persistent Node.js host (for example, a VPS, Railway, or Render) rather than deploying only `public/` as a static site. Configure the environment variables above on that server and run:
 
 ```bash
