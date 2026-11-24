@@ -8,7 +8,8 @@ document.addEventListener('DOMContentLoaded', () => {
     merchant: null,
     featureFlags: {},
     maintenance: { enabled: false, message: '' },
-    refreshTimer: null
+    refreshTimer: null,
+    applicationStep: 1
   };
   const toastContainer = el('toastContainer');
   const adminPermissions = [
@@ -143,6 +144,75 @@ document.addEventListener('DOMContentLoaded', () => {
     el('applicationGmail').value = merchant?.gmailUser || state.user?.email || '';
     el('applicationGmailPass').value = '';
     updateWebsiteField();
+    showApplicationStep(1);
+  }
+
+  function showApplicationStep(step) {
+    state.applicationStep = Math.max(1, Math.min(6, step));
+    document.querySelectorAll('[data-application-step]').forEach((node) => {
+      node.classList.toggle('active', Number(node.dataset.applicationStep) === state.applicationStep);
+    });
+    document.querySelectorAll('[data-wizard-step]').forEach((node) => {
+      const stepNumber = Number(node.dataset.wizardStep);
+      node.classList.toggle('active', stepNumber === state.applicationStep);
+      node.classList.toggle('complete', stepNumber < state.applicationStep);
+    });
+    el('btnApplicationBack').hidden = state.applicationStep === 1;
+    el('btnApplicationNext').hidden = state.applicationStep === 6;
+    el('btnTestApplicationGmail').hidden = state.applicationStep !== 6;
+    el('btnSubmitApplication').hidden = state.applicationStep !== 6;
+  }
+
+  function validateApplicationStep() {
+    const step = state.applicationStep;
+    let field;
+    if (step === 1) field = el('applicationName');
+    if (step === 2) field = el('applicationPhone');
+    if (step === 3) {
+      field = el('applicationBusiness').value.trim() ? el('applicationPayee') : el('applicationBusiness');
+    }
+    if (step === 4) field = el('applicationUpi');
+    if (step === 5) field = el('applicationTarget');
+    if (step === 6) {
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(el('applicationGmail').value.trim())) {
+        toast('Enter a valid Gmail address.');
+        el('applicationGmail').focus();
+        return false;
+      }
+      field = el('applicationGmailPass');
+    }
+    if (field && !field.value.trim()) {
+      field.reportValidity();
+      field.focus();
+      return false;
+    }
+    if (step === 2 && !/^\+?[1-9]\d{6,14}$/.test(el('applicationPhone').value.replace(/[\s()-]/g, ''))) {
+      toast('Enter a valid mobile number including country code.');
+      el('applicationPhone').focus();
+      return false;
+    }
+    if (step === 3 && !el('applicationPayee').value.trim()) {
+      el('applicationPayee').focus();
+      return false;
+    }
+    if (step === 4 && !/^[^@\s]+@[^@\s]+$/.test(el('applicationUpi').value.trim())) {
+      toast('Enter a valid UPI ID, for example yourupi@fam.');
+      el('applicationUpi').focus();
+      return false;
+    }
+    if (step === 5) {
+      updateWebsiteField();
+      if (el('applicationWebsite').required && !el('applicationWebsite').value.trim()) {
+        el('applicationWebsite').focus();
+        return false;
+      }
+    }
+    if (step === 6 && !/^[a-zA-Z0-9]{16}$/.test(el('applicationGmailPass').value.replace(/\s+/g, ''))) {
+      toast('Enter the 16-character Gmail App Password.');
+      el('applicationGmailPass').focus();
+      return false;
+    }
+    return true;
   }
 
   function updateWebsiteField() {
@@ -508,6 +578,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     el('formMerchantApplication').addEventListener('submit', submitApplication);
     el('applicationTarget').addEventListener('change', updateWebsiteField);
+    el('btnApplicationNext').addEventListener('click', () => {
+      if (validateApplicationStep()) showApplicationStep(state.applicationStep + 1);
+    });
+    el('btnApplicationBack').addEventListener('click', () => showApplicationStep(state.applicationStep - 1));
     el('btnTestApplicationGmail').addEventListener('click', testGmail);
     el('btnApplicationLogout').addEventListener('click', () => signOut().catch((error) => toast(error.message)));
     el('btnDashLogout').addEventListener('click', () => signOut().catch((error) => toast(error.message)));

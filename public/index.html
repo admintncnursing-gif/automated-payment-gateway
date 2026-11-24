@@ -362,33 +362,72 @@
             <button type="button" class="btn-dash-secondary" id="btnApplicationLogout">Sign out</button>
           </div>
           <form id="formMerchantApplication" class="application-form">
-            <div class="form-row">
-              <div class="form-group flex-1">
+            <div class="merchant-wizard-progress" id="merchantWizardProgress">
+              <span class="merchant-wizard-dot active" data-wizard-step="1">1</span>
+              <span class="merchant-wizard-line"></span>
+              <span class="merchant-wizard-dot" data-wizard-step="2">2</span>
+              <span class="merchant-wizard-line"></span>
+              <span class="merchant-wizard-dot" data-wizard-step="3">3</span>
+              <span class="merchant-wizard-line"></span>
+              <span class="merchant-wizard-dot" data-wizard-step="4">4</span>
+              <span class="merchant-wizard-line"></span>
+              <span class="merchant-wizard-dot" data-wizard-step="5">5</span>
+              <span class="merchant-wizard-line"></span>
+              <span class="merchant-wizard-dot" data-wizard-step="6">6</span>
+            </div>
+
+            <section class="merchant-wizard-step active" data-application-step="1">
+              <span class="section-tag">STEP 1 OF 6</span>
+              <h3>Your identity</h3>
+              <p class="panel-sub">Enter the name that should be used for this merchant account.</p>
+              <div class="form-group">
                 <label class="form-label" for="applicationName">Full name</label>
                 <input id="applicationName" class="form-control" autocomplete="name" required>
               </div>
-              <div class="form-group flex-1">
+            </section>
+
+            <section class="merchant-wizard-step" data-application-step="2">
+              <span class="section-tag">STEP 2 OF 6</span>
+              <h3>Mobile number</h3>
+              <p class="panel-sub">Use a mobile number where ArchXpay administrators or support can contact you.</p>
+              <div class="form-group">
                 <label class="form-label" for="applicationPhone">Mobile number</label>
-                <input id="applicationPhone" class="form-control" type="tel" autocomplete="tel" required>
+                <input id="applicationPhone" class="form-control" type="tel" autocomplete="tel" placeholder="+91 98765 43210" required>
               </div>
-            </div>
-            <div class="form-row">
-              <div class="form-group flex-1">
-                <label class="form-label" for="applicationBusiness">Business name</label>
-                <input id="applicationBusiness" class="form-control" required>
+            </section>
+
+            <section class="merchant-wizard-step" data-application-step="3">
+              <span class="section-tag">STEP 3 OF 6</span>
+              <h3>Business details</h3>
+              <p class="panel-sub">Tell us the public store name and the exact payee name associated with UPI.</p>
+              <div class="form-row">
+                <div class="form-group flex-1">
+                  <label class="form-label" for="applicationBusiness">Business / store name</label>
+                  <input id="applicationBusiness" class="form-control" placeholder="Your Store Name" required>
+                </div>
+                <div class="form-group flex-1">
+                  <label class="form-label" for="applicationPayee">UPI payee name</label>
+                  <input id="applicationPayee" class="form-control" placeholder="PAYEE NAME" required>
+                </div>
               </div>
-              <div class="form-group flex-1">
-                <label class="form-label" for="applicationPayee">UPI payee name</label>
-                <input id="applicationPayee" class="form-control" required>
-              </div>
-            </div>
-            <div class="form-row">
-              <div class="form-group flex-1">
+            </section>
+
+            <section class="merchant-wizard-step" data-application-step="4">
+              <span class="section-tag">STEP 4 OF 6</span>
+              <h3>Your settlement UPI ID</h3>
+              <p class="panel-sub">This is the UPI address that will receive customer payments after approval.</p>
+              <div class="form-group">
                 <label class="form-label" for="applicationUpi">UPI ID</label>
-                <input id="applicationUpi" class="form-control font-mono" placeholder="yourhandle@upi" required>
+                <input id="applicationUpi" class="form-control font-mono" placeholder="yourupi@fam" required>
               </div>
-              <div class="form-group flex-1">
-                <label class="form-label" for="applicationTarget">Where will you use ArchXpay?</label>
+            </section>
+
+            <section class="merchant-wizard-step" data-application-step="5">
+              <span class="section-tag">STEP 5 OF 6</span>
+              <h3>Where will you use ArchXpay?</h3>
+              <p class="panel-sub">Select the product or website where you will integrate payment links and APIs.</p>
+              <div class="form-group">
+                <label class="form-label" for="applicationTarget">Usage type</label>
                 <select id="applicationTarget" class="form-control" required>
                   <option value="">Select an app or website</option>
                   <option value="Website">Website</option>
@@ -396,25 +435,44 @@
                   <option value="Other">Other</option>
                 </select>
               </div>
-            </div>
-            <div class="form-group" id="websiteUrlGroup">
-              <label class="form-label" for="applicationWebsite">Website URL</label>
-              <input id="applicationWebsite" class="form-control" type="url" placeholder="https://example.com">
-            </div>
-            <div class="form-row">
-              <div class="form-group flex-1">
-                <label class="form-label" for="applicationGmail">Gmail for UPI credit alerts</label>
-                <input id="applicationGmail" class="form-control" type="email" autocomplete="email" required>
+              <div class="form-group" id="websiteUrlGroup">
+                <label class="form-label" for="applicationWebsite">Website URL</label>
+                <input id="applicationWebsite" class="form-control" type="url" placeholder="https://yourwebsite.com">
               </div>
-              <div class="form-group flex-1">
-                <label class="form-label" for="applicationGmailPass">Gmail App Password</label>
-                <input id="applicationGmailPass" class="form-control font-mono" type="password" autocomplete="new-password" placeholder="16 characters" required>
+            </section>
+
+            <section class="merchant-wizard-step" data-application-step="6">
+              <span class="section-tag">STEP 6 OF 6</span>
+              <h3>Gmail alert verification</h3>
+              <p class="panel-sub">ArchXpay uses your Gmail bank-alert messages to help match received payments with checkout orders.</p>
+              <div class="gmail-app-password-guide">
+                <strong>Generate a 16-character Gmail App Password</strong>
+                <ol>
+                  <li>Sign in to <a href="https://myaccount.google.com/security" target="_blank" rel="noopener noreferrer">Google Account Security</a>.</li>
+                  <li>Turn on <strong>2-Step Verification</strong>.</li>
+                  <li>Open <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noopener noreferrer">Google App Passwords</a>.</li>
+                  <li>Create an app password named <strong>ArchXpay</strong>, copy all 16 characters, and keep it private.</li>
+                  <li>In Gmail settings, enable <strong>IMAP</strong> under Forwarding and POP/IMAP.</li>
+                </ol>
               </div>
-            </div>
-            <p class="panel-sub">Use a dedicated Google App Password (not your Google account password). It is encrypted before storage and is used only by the server-side IMAP verifier.</p>
+              <div class="form-row">
+                <div class="form-group flex-1">
+                  <label class="form-label" for="applicationGmail">Gmail for UPI credit alerts</label>
+                  <input id="applicationGmail" class="form-control" type="email" autocomplete="email" required>
+                </div>
+                <div class="form-group flex-1">
+                  <label class="form-label" for="applicationGmailPass">Gmail App Password</label>
+                  <input id="applicationGmailPass" class="form-control font-mono" type="password" autocomplete="new-password" placeholder="16 characters" required>
+                </div>
+              </div>
+              <p class="panel-sub">Use the App Password, never your normal Google account password. It is encrypted before server-side storage.</p>
+            </section>
+
             <div class="application-actions">
-              <button type="button" class="btn-dash-secondary" id="btnTestApplicationGmail">Test Gmail connection</button>
-              <button type="submit" class="btn-auth-submit" id="btnSubmitApplication">Submit for review</button>
+              <button type="button" class="btn-dash-secondary" id="btnApplicationBack" hidden>Back</button>
+              <button type="button" class="btn-auth-submit" id="btnApplicationNext">Continue</button>
+              <button type="button" class="btn-dash-secondary" id="btnTestApplicationGmail" hidden>Test Gmail connection</button>
+              <button type="submit" class="btn-auth-submit" id="btnSubmitApplication" hidden>Submit for review</button>
             </div>
             <p id="applicationFeedback" class="panel-sub" role="status"></p>
           </form>
