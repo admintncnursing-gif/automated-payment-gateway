@@ -4,7 +4,24 @@ const { decryptCredential, encryptCredential } = require('./credentials');
 const supabaseUrl = process.env.SUPABASE_URL;
 const anonKey = process.env.SUPABASE_ANON_KEY;
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const client = supabaseUrl && serviceRoleKey
+function getLegacyJwtRole(key) {
+  if (!key || !key.startsWith('eyJ')) return null;
+  try {
+    const payload = JSON.parse(Buffer.from(key.split('.')[1], 'base64').toString('utf8'));
+    return payload.role || null;
+  } catch {
+    return null;
+  }
+}
+const serviceRoleRole = getLegacyJwtRole(serviceRoleKey);
+const hasValidServiceRoleKey = Boolean(
+  serviceRoleKey &&
+  (serviceRoleRole === 'service_role' || serviceRoleKey.startsWith('sb_secret_'))
+);
+if (serviceRoleKey && !hasValidServiceRoleKey) {
+  console.error('[Supabase] SUPABASE_SERVICE_ROLE_KEY is not a service-role key. Check Project Settings > API.');
+}
+const client = supabaseUrl && hasValidServiceRoleKey
   ? createClient(supabaseUrl, serviceRoleKey, {
     auth: {
       autoRefreshToken: false,

@@ -216,18 +216,23 @@ async function requireApprovedMerchant(req, res, next) {
 
 app.get('/api/config', async (req, res) => {
   const config = publicConfig();
-  if (!config.supabaseUrl || !config.supabaseAnonKey || !hasSupabaseConfig()) {
-    return res.status(503).json({ error: 'Supabase Auth and database configuration are required.' });
+  if (!config.supabaseUrl || !config.supabaseAnonKey) {
+    return res.status(503).json({ error: 'Set SUPABASE_URL and SUPABASE_ANON_KEY in the Vercel production environment.' });
   }
-  const { data, error } = await getClient()
+  let maintenance = { enabled: false, message: '' };
+  if (hasSupabaseConfig()) {
+    const { data, error } = await getClient()
     .from('system_settings')
     .select('setting_value')
     .eq('setting_key', 'maintenance')
     .maybeSingle();
-  if (error) throw error;
+    if (error && error.code !== 'PGRST205') throw error;
+    if (!error) maintenance = data?.setting_value || maintenance;
+  }
   res.json({
     ...config,
-    maintenance: data?.setting_value || { enabled: false, message: '' }
+    maintenance,
+    backendConfigured: hasSupabaseConfig()
   });
 });
 
