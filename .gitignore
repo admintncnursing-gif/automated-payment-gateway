@@ -1,6 +1,5 @@
 # Dependency directories
 node_modules/
-functions/payment-gateway/node_modules/
 
 # Environment files
 .env
@@ -14,7 +13,8 @@ data/store.json
 # Build and deployment caches
 .vercel/
 public/.vercel/
-.appwrite/
+.wrangler/
+dist/
 
 # Agent & workspace cache
 .agents/

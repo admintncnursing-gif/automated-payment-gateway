@@ -1,0 +1,4 @@
+project_id = "jxwvcjlkjmllzptvpfng"
+
+[functions.payment-gateway]
+verify_jwt = false

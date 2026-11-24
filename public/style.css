@@ -1,5 +1,5 @@
 /* -------------------------------------------------------------
-   AuraPay Production Fintech Stylesheet (Stageshow Inspired)
+   ArchXpay Production Fintech Stylesheet
    ------------------------------------------------------------- */
 
 :root {
@@ -103,12 +103,9 @@ body {
 .brand-logo-icon {
   width: 36px;
   height: 36px;
-  background: #0F172A;
-  color: white;
   border-radius: var(--radius-sm);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: block;
+  object-fit: contain;
   box-shadow: 0 4px 10px rgba(15, 23, 42, 0.15);
 }
 
@@ -1900,3 +1897,98 @@ body {
 .font-mono { font-family: var(--font-mono); }
 .font-bold { font-weight: 700; }
 .hidden { display: none !important; }
+
+.maintenance-banner {
+  position: relative;
+  z-index: 20;
+  padding: 12px 20px;
+  background: #FEF3C7;
+  color: #92400E;
+  text-align: center;
+  font-weight: 700;
+}
+
+.application-card {
+  max-width: 900px;
+  margin: 48px auto;
+  padding: 28px;
+}
+
+.application-form {
+  display: grid;
+  gap: 16px;
+}
+
+.application-form .form-row {
+  display: flex;
+  gap: 16px;
+}
+
+.application-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.application-status {
+  margin-top: 24px;
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-subtle);
+}
+
+.application-status h2 {
+  margin-bottom: 8px;
+}
+
+.admin-list {
+  display: grid;
+  gap: 12px;
+}
+
+.admin-record {
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  overflow-wrap: anywhere;
+}
+
+.admin-record p {
+  margin-top: 6px;
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+}
+
+.review-note {
+  min-height: 74px;
+  margin-top: 10px;
+}
+
+.permission-list {
+  display: grid;
+  gap: 6px;
+  margin: 10px 0;
+  font-size: 0.78rem;
+}
+
+.permission-list label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+@media (max-width: 700px) {
+  .application-card {
+    margin: 24px 12px;
+    padding: 18px;
+  }
+
+  .application-form .form-row {
+    flex-direction: column;
+    gap: 0;
+  }
+}

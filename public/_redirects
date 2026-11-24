@@ -1,0 +1,4 @@
+/pay/* /paywall.html 200
+/checkout/* /paywall.html 200
+/test/* /paywall.html 200
+/test /paywall.html 200

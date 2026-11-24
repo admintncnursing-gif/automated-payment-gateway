@@ -7,14 +7,21 @@ const jsQR = require('jsqr');
  */
 function buildUpiUri({ upiId, payeeName, amount, note, orderId }) {
   // 1. Payee VPA / UPI ID: Crucial - do NOT percent-encode '@' into '%40'!
-  const cleanVpa = (upiId || '8789601387@fam').trim();
+  const cleanVpa = String(upiId || '').trim();
+  if (!/^[^@\s]+@[^@\s]+$/.test(cleanVpa)) {
+    throw new Error('A valid merchant UPI ID is required to create a payment request.');
+  }
 
   // 2. Payee Merchant Name: Format and sanitize
-  const safeName = (payeeName || 'Monu Kumar').replace(/&/g, 'and').replace(/[^a-zA-Z0-9 ]/g, '').replace(/\s+/g, ' ').trim();
+  const safeName = (payeeName || 'Merchant').replace(/&/g, 'and').replace(/[^a-zA-Z0-9 ]/g, '').replace(/\s+/g, ' ').trim();
   const cleanName = encodeURIComponent(safeName);
 
   // 3. Amount: Fixed to 2 decimal places
-  const cleanAmount = Number(amount || 1.00).toFixed(2);
+  const numericAmount = Number(amount);
+  if (!Number.isFinite(numericAmount) || numericAmount <= 0 || numericAmount > 9999999999.99) {
+    throw new Error('A valid payment amount is required to create a payment request.');
+  }
+  const cleanAmount = numericAmount.toFixed(2);
 
   // 4. Transaction Reference & Note
   const orderCode = orderId || `PAY-${Date.now().toString().slice(-6)}`;
@@ -66,7 +73,7 @@ async function decodeQrImage(filePath) {
       let upiId = paMatch ? paMatch[1] : null;
       let payeeName = pnMatch ? decodeURIComponent(pnMatch[1]) : null;
 
-      // If raw data is directly an email-like UPI address (e.g. 8789601387@fam)
+      // Some QR codes contain only the VPA instead of a UPI URI.
       if (!upiId && raw.includes('@')) {
         const directMatch = raw.match(/([a-zA-Z0-9.\-_]+@[a-zA-Z0-9]+)/);
         if (directMatch) upiId = directMatch[1];
@@ -75,8 +82,8 @@ async function decodeQrImage(filePath) {
       return {
         success: true,
         raw,
-        upiId: upiId || '8789601387@fam',
-        payeeName: payeeName || 'FamPay Merchant'
+        upiId: upiId || '',
+        payeeName: payeeName || ''
       };
     }
 

@@ -1,7 +1,11 @@
 const fs = require('fs');
 const path = require('path');
-const crypto = require('crypto');
-const { MerchantModel, OrderModel, connectMongo, getIsConnected } = require('./mongo');
+const {
+  connectSupabase,
+  hasSupabaseConfig,
+  selectAll,
+  upsertRecord
+} = require('./supabase');
 
 const DB_PATH = path.join(__dirname, '..', 'data', 'store.json');
 
@@ -11,10 +15,8 @@ class Store {
       merchants: {},
       orders: {}
     };
-    this.mongoReady = false;
     this.loadLocal();
-    this.ensureDefaultMerchant();
-    this.initMongo();
+    this.ready = this.initSupabase();
   }
 
   loadLocal() {
@@ -24,6 +26,25 @@ class Store {
         this.data = JSON.parse(raw);
         if (!this.data.merchants) this.data.merchants = {};
         if (!this.data.orders) this.data.orders = {};
+        let needsSave = Boolean(this.data.merchants.merch_default);
+        delete this.data.merchants.merch_default;
+        for (const [orderId, order] of Object.entries(this.data.orders)) {
+          if (order.merchantId === 'merch_default') {
+            delete this.data.orders[orderId];
+            needsSave = true;
+          }
+        }
+        for (const merchant of Object.values(this.data.merchants)) {
+          if (Object.hasOwn(merchant, 'password') ||
+              Object.hasOwn(merchant, 'gmailAppPass') ||
+              Object.hasOwn(merchant, 'gmailAppPassEncrypted')) {
+            needsSave = true;
+          }
+          delete merchant.password;
+          delete merchant.gmailAppPass;
+          delete merchant.gmailAppPassEncrypted;
+        }
+        if (needsSave) this.saveLocal();
       }
     } catch (e) {
       console.warn('[Store] Could not load local store.json, using defaults:', e.message);
@@ -34,111 +55,84 @@ class Store {
     try {
       const dir = path.dirname(DB_PATH);
       if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-      fs.writeFileSync(DB_PATH, JSON.stringify(this.data, null, 2), 'utf-8');
+      const safeData = {
+        ...this.data,
+        merchants: Object.fromEntries(Object.entries(this.data.merchants).map(([id, merchant]) => {
+          const { password, gmailAppPass, gmailAppPassEncrypted, ...safeMerchant } = merchant;
+          return [id, safeMerchant];
+        }))
+      };
+      fs.writeFileSync(DB_PATH, JSON.stringify(safeData, null, 2), 'utf-8');
     } catch (e) {
       console.error('[Store] Local save failed:', e.message);
     }
   }
 
-  async initMongo() {
+  async initSupabase() {
     try {
-      const connected = await connectMongo();
+      const connected = await connectSupabase();
       if (!connected) return;
-      this.mongoReady = true;
-
-      // Sync existing records to MongoDB or load from MongoDB
-      const countMerchants = await MerchantModel.countDocuments();
-      if (countMerchants === 0) {
-        console.log('[Store] Seeding local data to MongoDB Atlas...');
-        await this.syncAllToMongo();
-      } else {
-        console.log('[Store] Loading data from MongoDB Atlas...');
-        await this.loadFromMongo();
-      }
+      const merchants = await selectAll('merchants');
+      console.log('[Store] Loading data from Supabase...');
+      this.applyRemoteData(merchants, await selectAll('orders'));
     } catch (err) {
-      console.error('[Store] MongoDB sync error:', err.message);
+      console.error('[Store] Supabase sync error:', err.message);
     }
   }
 
-  async syncAllToMongo() {
-    try {
-      for (const m of Object.values(this.data.merchants)) {
-        await MerchantModel.findOneAndUpdate({ id: m.id }, m, { upsert: true, returnDocument: 'after' });
-      }
-      for (const o of Object.values(this.data.orders)) {
-        await OrderModel.findOneAndUpdate({ orderId: o.orderId }, o, { upsert: true, returnDocument: 'after' });
-      }
-      console.log('[Store] Initial seed to MongoDB Atlas complete.');
-    } catch (err) {
-      console.error('[Store] Seed to MongoDB failed:', err.message);
+  applyRemoteData(merchants, orders) {
+    this.data.merchants = {};
+    this.data.orders = {};
+    for (const merchant of merchants) {
+      this.data.merchants[merchant.id] = merchant;
     }
+    for (const order of orders) {
+      this.data.orders[order.orderId] = order;
+    }
+    this.saveLocal();
+    console.log(`[Store] Synced from Supabase: ${merchants.length} merchants, ${orders.length} orders.`);
   }
 
-  async loadFromMongo() {
-    try {
-      const merchants = await MerchantModel.find({}).lean();
-      for (const m of merchants) {
-        this.data.merchants[m.id] = m;
-      }
-      const orders = await OrderModel.find({}).lean();
-      for (const o of orders) {
-        this.data.orders[o.orderId] = o;
-      }
-      this.saveLocal();
-      console.log(`[Store] Synced from MongoDB Atlas: ${merchants.length} merchants, ${orders.length} orders.`);
-    } catch (err) {
-      console.error('[Store] Loading from MongoDB failed:', err.message);
-    }
-  }
-
-  ensureDefaultMerchant() {
-    if (Object.keys(this.data.merchants).length === 0) {
-      const defaultId = 'merch_default';
-      const defaultApiKey = 'aura_live_9f82b7c41a58e390d4e';
-      const defaultMerchant = {
-        id: defaultId,
-        name: process.env.PAYEE_NAME || 'Monu Kumar',
-        email: process.env.GMAIL_USER || 'huntkum@gmail.com',
-        password: 'password123',
-        businessName: process.env.BUSINESS_NAME || 'Apex Cloud & Payments',
-        upiId: process.env.UPI_ID || '8789601387@fam',
-        qrImagePath: '/uploads/default-qr.jpeg',
-        gmailUser: process.env.GMAIL_USER || 'huntkum@gmail.com',
-        gmailAppPass: process.env.GMAIL_APP_PASS || '',
-        apiKey: defaultApiKey,
-        isOnboarded: true,
-        createdAt: new Date().toISOString()
-      };
-      this.data.merchants[defaultId] = defaultMerchant;
-      this.saveLocal();
-    }
+  persistRecord(table, record, operation) {
+    if (!hasSupabaseConfig()) return;
+    upsertRecord(table, record).catch(err => {
+      console.error(`[Store] Supabase ${operation} failed:`, err.message);
+    });
   }
 
   createMerchant(data) {
     const id = `merch_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 6)}`;
-    const apiKey = `aura_live_${crypto.randomBytes(16).toString('hex')}`;
     const merchant = {
       id,
       name: data.name || 'Merchant',
       email: data.email.toLowerCase().trim(),
-      password: data.password,
       businessName: data.businessName || `${data.name}'s Store`,
-      upiId: data.upiId || '8789601387@fam',
+      upiId: data.upiId || '',
       qrImagePath: data.qrImagePath || '/uploads/default-qr.jpeg',
-      gmailUser: data.gmailUser || data.email,
+      gmailUser: data.gmailUser || '',
       gmailAppPass: data.gmailAppPass || '',
-      apiKey,
+      apiKey: null,
+      authUserId: data.authUserId,
+      phone: data.phone || '',
+      payeeName: data.payeeName || '',
+      targetApp: data.targetApp || '',
+      websiteUrl: data.websiteUrl || '',
+      reviewStatus: 'pending',
       isOnboarded: false,
       createdAt: new Date().toISOString()
     };
     this.data.merchants[id] = merchant;
     this.saveLocal();
 
-    // Persist to MongoDB
-    MerchantModel.findOneAndUpdate({ id }, merchant, { upsert: true }).catch(err => {
-      console.error('[Store] Mongo Merchant insert error:', err.message);
-    });
+    this.persistRecord('merchants', merchant, 'merchant insert');
 
+    return merchant;
+  }
+
+  putMerchant(merchant) {
+    this.data.merchants[merchant.id] = merchant;
+    this.saveLocal();
+    this.persistRecord('merchants', merchant, 'merchant update');
     return merchant;
   }
 
@@ -154,7 +148,9 @@ class Store {
 
   getMerchantByApiKey(apiKey) {
     if (!apiKey) return null;
-    return Object.values(this.data.merchants).find(m => m.apiKey === apiKey) || null;
+    return Object.values(this.data.merchants).find(m =>
+      m.apiKey === apiKey && m.reviewStatus === 'approved' && m.isOnboarded
+    ) || null;
   }
 
   updateMerchant(id, updates) {
@@ -163,16 +159,13 @@ class Store {
     Object.assign(m, updates);
     this.saveLocal();
 
-    // Persist to MongoDB
-    MerchantModel.findOneAndUpdate({ id }, { $set: updates }).catch(err => {
-      console.error('[Store] Mongo Merchant update error:', err.message);
-    });
+    this.persistRecord('merchants', m, 'merchant update');
 
     return m;
   }
 
   createOrder(data) {
-    const orderId = `PAY-${Date.now().toString().slice(-6)}-${Math.floor(100 + Math.random() * 900)}`;
+    const orderId = data.orderId || `PAY-${Date.now().toString().slice(-6)}-${Math.floor(100 + Math.random() * 900)}`;
     const order = {
       orderId,
       merchantId: data.merchantId,
@@ -190,10 +183,7 @@ class Store {
     this.data.orders[orderId] = order;
     this.saveLocal();
 
-    // Persist to MongoDB
-    OrderModel.findOneAndUpdate({ orderId }, order, { upsert: true }).catch(err => {
-      console.error('[Store] Mongo Order insert error:', err.message);
-    });
+    this.persistRecord('orders', order, 'order insert');
 
     return order;
   }
@@ -202,16 +192,13 @@ class Store {
     return this.data.orders[orderId] || null;
   }
 
-  updateOrder(orderId, updates) {
+  updateOrder(orderId, updates, persist = true) {
     const order = this.data.orders[orderId];
     if (!order) return null;
     Object.assign(order, updates);
     this.saveLocal();
 
-    // Persist to MongoDB
-    OrderModel.findOneAndUpdate({ orderId }, { $set: updates }).catch(err => {
-      console.error('[Store] Mongo Order update error:', err.message);
-    });
+    if (persist) this.persistRecord('orders', order, 'order update');
 
     return order;
   }

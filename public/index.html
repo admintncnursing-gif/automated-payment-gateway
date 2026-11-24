@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AuraPay • Direct UPI Settlement &amp; Automated Verification</title>
+  <title>ArchXpay • Merchant UPI Payment Gateway</title>
+  <link rel="icon" type="image/svg+xml" href="/archxpay-logo.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -13,19 +14,16 @@
 <body class="light-mode">
   <div class="bg-grid"></div>
   <div class="bg-glow-radial"></div>
+  <div id="maintenanceBanner" class="maintenance-banner hidden" role="status"></div>
 
   <!-- MASTER NAVIGATION -->
   <header class="navbar">
     <div class="nav-inner">
       <div class="nav-brand" id="brandLogo">
-        <div class="brand-logo-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-          </svg>
-        </div>
+        <img class="brand-logo-icon" src="/archxpay-logo.svg" alt="ArchXpay" width="36" height="36">
         <div class="brand-name-wrap">
-          <span class="brand-title">AuraPay</span>
-          <span class="brand-tag">0% FEE</span>
+          <span class="brand-title">ArchXpay</span>
+          <span class="brand-tag">UPI API</span>
         </div>
       </div>
 
@@ -34,6 +32,7 @@
         <a href="#comparison" class="nav-link">Comparison</a>
         <a href="#stageshow-demo" class="nav-link">Interactive Demo</a>
         <a href="#api-section" class="nav-link">API &amp; SDKs</a>
+        <a href="https://www.kira-devs.xyz/" class="nav-link" target="_blank" rel="noopener noreferrer">Terms</a>
       </nav>
 
       <div class="nav-actions">
@@ -58,25 +57,25 @@
       <!-- HERO SECTION -->
       <div class="hero-container">
         <div class="hero-pill">
-          <span class="hero-pill-badge">PRODUCTION READY</span>
-          <span>Zero-Fee Peer-to-Peer UPI Payment Gateway</span>
+          <span class="hero-pill-badge">MERCHANT APPROVED</span>
+          <span>Direct UPI settlement for modern businesses</span>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polyline points="9 18 15 12 9 6"/>
           </svg>
         </div>
 
         <h1 class="hero-title">
-          Peer-to-peer UPI checkout.<br>
-          <span class="text-gradient">Zero gateway fees. Real-time verification.</span>
+          Accept UPI payments.<br>
+          <span class="text-gradient">Review, verify, and scale with confidence.</span>
         </h1>
 
         <p class="hero-subtitle">
-          Direct FamPay settlement with automated IMAP bank verification in under 1.5 seconds. No 2.5% transaction deductions, no 3-day payout holds, and no risk of account freezes.
+          ArchXpay gives approved merchants dynamic checkout links, API access, Gmail IMAP monitoring, live order records, and an administrator-controlled onboarding workflow.
         </p>
 
         <div class="hero-cta-group">
           <button type="button" class="btn-hero-primary" id="btnHeroGetStarted">
-            <span>Start Free Setup</span>
+            <span>Get Started</span>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
               <line x1="5" y1="12" x2="19" y2="12"/>
               <polyline points="12 5 19 12 12 19"/>
@@ -86,10 +85,7 @@
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <polygon points="5 3 19 12 5 21 5 3"/>
             </svg>
-            <span>Launch Live Checkout</span>
-          </button>
-          <button type="button" class="btn-hero-interactive" id="btnTriggerHeroSimulation">
-            <span>⚡ Test Interactive Payment Flow</span>
+            <span>Merchant Dashboard</span>
           </button>
         </div>
 
@@ -109,7 +105,7 @@
                   <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
                   <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                 </svg>
-                <span>https://aurapay.io/pay/PAY-892104</span>
+                <span>https://archxpay.example/pay/PAY-892104</span>
               </div>
               <div class="chrome-badge">
                 <span class="dot-live"></span> 256-Bit SSL Secured
@@ -123,8 +119,8 @@
                   <div class="faux-merchant-header">
                     <div class="faux-avatar">A</div>
                     <div>
-                      <div class="faux-m-name">Apex Cloud Services</div>
-                      <div class="faux-verified">✓ Verified FamPay Payee</div>
+                      <div class="faux-m-name">Your Business</div>
+                      <div class="faux-verified">✓ Approved Merchant</div>
                     </div>
                   </div>
 
@@ -150,7 +146,7 @@
                       <img src="/qr-code.jpeg" alt="Faux QR" class="faux-qr-img">
                     </div>
                     <div class="faux-qr-tag">DOWN PAYMENT • SCAN &amp; PAY</div>
-                    <div class="faux-upi-id">UPI: 8789601387@fam</div>
+                    <div class="faux-upi-id">UPI: merchant-owned settlement account</div>
                   </div>
                 </div>
 
@@ -205,7 +201,7 @@
           <div class="arch-card">
             <div class="arch-num">01</div>
             <h4>Dynamic QR Generation</h4>
-            <p>Customer opens checkout. AuraPay generates a dynamic QR embedding <code>upi://pay?pa=...&amp;am=...&amp;tn=...</code> pre-filling the exact amount.</p>
+            <p>Customer opens checkout. ArchXpay generates a dynamic QR embedding <code>upi://pay?pa=...&amp;am=...&amp;tn=...</code> pre-filling the exact amount.</p>
           </div>
 
           <div class="arch-arrow">→</div>
@@ -221,7 +217,7 @@
           <div class="arch-card">
             <div class="arch-num">03</div>
             <h4>Active IMAP Stream</h4>
-            <p>The bank emits a transactional alert to your Gmail. AuraPay's active NOOP listener catches the email payload in milliseconds.</p>
+            <p>The bank emits a transactional alert to your Gmail. ArchXpay's active IMAP listener detects the notification and prepares it for order matching.</p>
           </div>
 
           <div class="arch-arrow">→</div>
@@ -247,7 +243,7 @@
             <thead>
               <tr>
                 <th>Feature</th>
-                <th class="col-highlight">AuraPay Gateway</th>
+                <th class="col-highlight">ArchXpay Gateway</th>
                 <th>Traditional Aggregators (Razorpay / Cashfree)</th>
               </tr>
             </thead>
@@ -293,46 +289,44 @@
           
           <div class="auth-header">
             <div class="auth-brand-logo">A</div>
-            <h2 class="auth-title" id="authTitle">Sign In to AuraPay</h2>
-            <p class="auth-subtitle" id="authSubtitle">Manage your payment gateway, API keys, and live transactions.</p>
+            <h2 class="auth-title" id="authTitle">Continue with Google</h2>
+            <p class="auth-subtitle" id="authSubtitle">Use your Google account to apply for a merchant account. Access is enabled only after review.</p>
           </div>
 
-          <div class="auth-tabs">
+          <button type="button" class="btn-auth-submit" id="btnGoogleAuth">Continue with Google</button>
+          <div class="auth-tabs" hidden>
             <button type="button" class="auth-tab active" id="tabSignIn">Sign In</button>
             <button type="button" class="auth-tab" id="tabSignUp">Create Account</button>
           </div>
 
           <!-- Sign In Form -->
-          <form class="auth-form" id="formSignIn">
+          <form class="auth-form" id="formSignIn" hidden>
             <div class="form-group">
               <label class="form-label" for="loginEmail">Email Address</label>
-              <input type="email" id="loginEmail" class="form-control" placeholder="name@business.com" value="huntkum@gmail.com" required>
+              <input type="email" id="loginEmail" class="form-control" placeholder="name@business.com" required>
             </div>
 
             <div class="form-group">
               <label class="form-label" for="loginPass">Password</label>
-              <input type="password" id="loginPass" class="form-control" placeholder="••••••••" value="password123" required>
+              <input type="password" id="loginPass" class="form-control" placeholder="••••••••" required>
             </div>
 
             <button type="submit" class="btn-auth-submit" id="btnSubmitLogin">
               <span>Sign In to Dashboard</span>
             </button>
 
-            <button type="button" class="btn-demo-account" id="btnQuickDemoLogin">
-              ⚡ Quick Sign In with Demo Merchant Account
-            </button>
           </form>
 
           <!-- Sign Up Form (Hidden by default) -->
-          <form class="auth-form hidden" id="formSignUp">
+          <form class="auth-form hidden" id="formSignUp" hidden>
             <div class="form-group">
               <label class="form-label" for="regName">Full Name</label>
-              <input type="text" id="regName" class="form-control" placeholder="Monu Kumar" required>
+              <input type="text" id="regName" class="form-control" placeholder="Your name" required>
             </div>
 
             <div class="form-group">
               <label class="form-label" for="regBusiness">Business / Store Name</label>
-              <input type="text" id="regBusiness" class="form-control" placeholder="Apex Studio" required>
+              <input type="text" id="regBusiness" class="form-control" placeholder="Your Store" required>
             </div>
 
             <div class="form-group">
@@ -359,6 +353,73 @@
          ============================================================== -->
     <section class="view-section" id="viewOnboarding">
       <div class="onboarding-wrapper">
+        <div class="application-card dash-panel" id="applicationCard">
+          <div class="panel-header">
+            <div>
+              <h2 class="panel-title">Merchant verification application</h2>
+              <p class="panel-sub">Complete your details. An administrator must review and approve your account before payment features are enabled.</p>
+            </div>
+            <button type="button" class="btn-dash-secondary" id="btnApplicationLogout">Sign out</button>
+          </div>
+          <form id="formMerchantApplication" class="application-form">
+            <div class="form-row">
+              <div class="form-group flex-1">
+                <label class="form-label" for="applicationName">Full name</label>
+                <input id="applicationName" class="form-control" autocomplete="name" required>
+              </div>
+              <div class="form-group flex-1">
+                <label class="form-label" for="applicationPhone">Mobile number</label>
+                <input id="applicationPhone" class="form-control" type="tel" autocomplete="tel" required>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group flex-1">
+                <label class="form-label" for="applicationBusiness">Business name</label>
+                <input id="applicationBusiness" class="form-control" required>
+              </div>
+              <div class="form-group flex-1">
+                <label class="form-label" for="applicationPayee">UPI payee name</label>
+                <input id="applicationPayee" class="form-control" required>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group flex-1">
+                <label class="form-label" for="applicationUpi">UPI ID</label>
+                <input id="applicationUpi" class="form-control font-mono" placeholder="yourhandle@upi" required>
+              </div>
+              <div class="form-group flex-1">
+                <label class="form-label" for="applicationTarget">Where will you use ArchXpay?</label>
+                <select id="applicationTarget" class="form-control" required>
+                  <option value="">Select an app or website</option>
+                  <option value="Website">Website</option>
+                  <option value="Mobile app">Mobile app</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group" id="websiteUrlGroup">
+              <label class="form-label" for="applicationWebsite">Website URL</label>
+              <input id="applicationWebsite" class="form-control" type="url" placeholder="https://example.com">
+            </div>
+            <div class="form-row">
+              <div class="form-group flex-1">
+                <label class="form-label" for="applicationGmail">Gmail for UPI credit alerts</label>
+                <input id="applicationGmail" class="form-control" type="email" autocomplete="email" required>
+              </div>
+              <div class="form-group flex-1">
+                <label class="form-label" for="applicationGmailPass">Gmail App Password</label>
+                <input id="applicationGmailPass" class="form-control font-mono" type="password" autocomplete="new-password" placeholder="16 characters" required>
+              </div>
+            </div>
+            <p class="panel-sub">Use a dedicated Google App Password (not your Google account password). It is encrypted before storage and is used only by the server-side IMAP verifier.</p>
+            <div class="application-actions">
+              <button type="button" class="btn-dash-secondary" id="btnTestApplicationGmail">Test Gmail connection</button>
+              <button type="submit" class="btn-auth-submit" id="btnSubmitApplication">Submit for review</button>
+            </div>
+            <p id="applicationFeedback" class="panel-sub" role="status"></p>
+          </form>
+          <div id="applicationStatus" class="application-status hidden"></div>
+        </div>
         
         <!-- Step Navigation Bar -->
         <div class="onboarding-progress-bar">
@@ -399,12 +460,12 @@
 
               <div class="form-group">
                 <label class="form-label" for="obBusinessName">Business / Brand Name</label>
-                <input type="text" id="obBusinessName" class="form-control" value="Apex Cloud Services" placeholder="e.g. Apex Digital">
+                <input type="text" id="obBusinessName" class="form-control" placeholder="e.g. Your Business">
               </div>
 
               <div class="form-group">
                 <label class="form-label" for="obUpiId">Settlement UPI ID</label>
-                <input type="text" id="obUpiId" class="form-control font-mono" value="8789601387@fam" placeholder="e.g. 8789601387@fam">
+                <input type="text" id="obUpiId" class="form-control font-mono" placeholder="yourhandle@upi">
                 <span class="form-hint">Funds will be deposited directly to this UPI ID.</span>
               </div>
 
@@ -447,7 +508,7 @@
                 <img src="/qr-code.jpeg" alt="Uploaded QR" class="preview-thumb" id="previewQrImg">
                 <div class="detection-info">
                   <span class="detection-badge">✓ QR Successfully Decoded</span>
-                  <div class="detected-id" id="detectedUpiTag">UPI ID: 8789601387@fam</div>
+                  <div class="detected-id" id="detectedUpiTag">UPI ID: not detected</div>
                   <div class="detected-sub">Ready for dynamic amount generation.</div>
                 </div>
               </div>
@@ -522,7 +583,7 @@
                     <div class="step-circle">4</div>
                     <div>
                       <strong>Confirm Gmail Link</strong>
-                      <p>Ensure <code class="font-mono">huntkum@gmail.com</code> is your verified email.</p>
+                      <p>Ensure the account receiving payment alerts is the Gmail account you connect.</p>
                     </div>
                   </div>
                 </div>
@@ -546,7 +607,7 @@
             <div class="slide-card">
               <div class="slide-badge">STEP 4 OF 5 • GMAIL CREDENTIALS</div>
               <h2 class="slide-title">Connect Gmail &amp; 16-Char App Password</h2>
-              <p class="slide-sub">AuraPay securely connects to your Gmail IMAP via Google's sanctioned App Passwords.</p>
+              <p class="slide-sub">ArchXpay securely connects to your Gmail IMAP via Google's sanctioned App Passwords.</p>
 
               <div class="app-pass-guide">
                 <div class="guide-col">
@@ -563,19 +624,19 @@
                 </div>
                 <div class="guide-col">
                   <span class="guide-step-tag">4</span>
-                  <span>Name it <strong>AuraPay</strong> &amp; copy the 16 letters</span>
+                  <span>Name it <strong>ArchXpay</strong> &amp; copy the 16 letters</span>
                 </div>
               </div>
 
               <div class="form-row">
                 <div class="form-group flex-1">
                   <label class="form-label" for="obGmailUser">Gmail Address</label>
-                  <input type="email" id="obGmailUser" class="form-control" value="huntkum@gmail.com" required>
+                  <input type="email" id="obGmailUser" class="form-control" required>
                 </div>
 
                 <div class="form-group flex-1">
                   <label class="form-label" for="obGmailPass">16-Letter App Password</label>
-                  <input type="text" id="obGmailPass" class="form-control font-mono" value="onqe fwmv ahiq fopw" placeholder="xxxx xxxx xxxx xxxx" required>
+                  <input type="password" id="obGmailPass" class="form-control font-mono" placeholder="xxxx xxxx xxxx xxxx" required>
                 </div>
               </div>
 
@@ -604,12 +665,12 @@
             <div class="slide-card text-center">
               <div class="celebration-circle">🎉</div>
               <h2 class="slide-title">Payment Gateway is Ready!</h2>
-              <p class="slide-sub">Your FamPay UPI and Gmail watcher are fully configured. You can now accept payments anywhere.</p>
+              <p class="slide-sub">Your UPI settlement account and Gmail watcher are fully configured. Payment access begins after administrator approval.</p>
 
               <div class="api-key-reveal-box">
                 <div class="api-label">Your Live Merchant API Key</div>
                 <div class="api-key-row">
-                  <span class="api-key-text font-mono" id="obApiKeyDisplay">aura_live_9f82b7c41a58e390d4e</span>
+                  <span class="api-key-text font-mono" id="obApiKeyDisplay">Available after approval</span>
                   <button type="button" class="btn-copy-key" id="btnCopyObApiKey">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
@@ -645,12 +706,12 @@
         
         <div class="dash-header">
           <div>
-            <h1 class="dash-title" id="dashBusinessTitle">Apex Cloud &amp; Payments</h1>
+            <h1 class="dash-title" id="dashBusinessTitle">Merchant Dashboard</h1>
             <p class="dash-subtitle">Real-time payment gateway overview &amp; active concurrency monitor.</p>
           </div>
 
           <div class="dash-header-actions">
-            <button type="button" class="btn-dash-primary" id="btnOpenCreatePaywallModal">
+            <button type="button" class="btn-dash-primary" id="btnOpenCreatePaywallModal" data-feature="payment_links">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                 <line x1="12" y1="5" x2="12" y2="19"/>
                 <line x1="5" y1="12" x2="19" y2="12"/>
@@ -742,11 +803,13 @@
               <div class="dash-key-box">
                 <span class="font-mono text-truncate" id="dashApiKeyDisplay">aura_live_...</span>
                 <button type="button" class="btn-copy-sm" id="btnCopyDashKey">Copy</button>
+                <button type="button" class="btn-copy-sm" id="btnRegenerateDashKey">Regenerate</button>
               </div>
             </div>
 
             <div class="sub-panel" id="api-section">
               <div class="sub-panel-title">Integration Code Snippet</div>
+              <button type="button" class="btn-dash-secondary" id="btnViewApiDocs" style="margin-bottom:12px;">View API documentation</button>
               <div class="code-tabs">
                 <button type="button" class="code-tab active" data-lang="curl">cURL</button>
                 <button type="button" class="code-tab" data-lang="node">Node.js</button>
@@ -771,6 +834,111 @@
       </div>
     </section>
 
+    <section class="view-section" id="viewAdmin">
+      <div class="dashboard-wrapper">
+        <div class="dash-header">
+          <div>
+            <h1 class="dash-title">Administration</h1>
+            <p class="dash-subtitle" id="adminRoleLabel">System-wide operations and access management.</p>
+          </div>
+          <button type="button" class="btn-dash-secondary" id="btnAdminLogout">Sign out</button>
+        </div>
+        <div class="metrics-grid" id="adminMetrics"></div>
+        <div class="dash-split-grid">
+          <div class="dash-panel flex-2">
+            <div class="panel-header">
+              <div><h3 class="panel-title">Merchant applications</h3><p class="panel-sub">Review, approve, or deny merchant access.</p></div>
+              <button type="button" class="btn-refresh" id="btnRefreshApplications">Refresh</button>
+            </div>
+            <div id="adminApplications" class="admin-list"></div>
+            <div class="sub-panel" id="adminOrdersPanel">
+              <div class="sub-panel-title">Recent orders</div>
+              <div id="adminOrders" class="admin-list"></div>
+            </div>
+          </div>
+          <div class="dash-panel flex-1" id="adminControls">
+            <div class="sub-panel" id="adminUsersPanel">
+              <div class="sub-panel-title">Staff accounts</div>
+              <form id="formInviteAdmin">
+                <div class="form-group"><label class="form-label" for="inviteAdminEmail">Invite admin by email</label><input id="inviteAdminEmail" class="form-control" type="email" placeholder="admin@example.com" required></div>
+                <div class="permission-list">
+                  <label><input type="checkbox" class="invite-permission" value="applications:manage"> applications:manage</label>
+                  <label><input type="checkbox" class="invite-permission" value="metrics:read"> metrics:read</label>
+                  <label><input type="checkbox" class="invite-permission" value="orders:read"> orders:read</label>
+                  <label><input type="checkbox" class="invite-permission" value="users:manage"> users:manage</label>
+                  <label><input type="checkbox" class="invite-permission" value="settings:manage"> settings:manage</label>
+                  <label><input type="checkbox" class="invite-permission" value="audit:read"> audit:read</label>
+                </div>
+                <button class="btn-dash-secondary" type="submit">Send admin invite</button>
+              </form>
+              <div id="adminUsers" class="admin-list"></div>
+            </div>
+            <div class="sub-panel" id="adminSettingsPanel">
+              <div class="sub-panel-title">Feature flags</div>
+              <form id="formFeatureFlag">
+                <div class="form-group"><label class="form-label" for="featureFlagKey">Flag key</label><input id="featureFlagKey" class="form-control" placeholder="new-checkout-ui" required></div>
+                <div class="form-group"><label class="form-label" for="featureFlagUser">Optional user ID</label><input id="featureFlagUser" class="form-control" placeholder="Leave blank for everyone"></div>
+                <div class="form-group"><label><input id="featureFlagEnabled" type="checkbox"> Enabled system-wide</label></div>
+                <button class="btn-dash-primary" type="submit">Save flag</button>
+              </form>
+              <div id="adminFlags" class="admin-list"></div>
+            </div>
+            <div class="sub-panel" id="adminMaintenancePanel">
+              <div class="sub-panel-title">Maintenance mode</div>
+              <form id="formMaintenance">
+                <div class="form-group"><label><input id="maintenanceEnabled" type="checkbox"> Show maintenance banner and pause merchant APIs</label></div>
+                <div class="form-group"><label class="form-label" for="maintenanceMessage">Banner message</label><input id="maintenanceMessage" class="form-control"></div>
+                <button class="btn-dash-primary" type="submit">Update maintenance mode</button>
+              </form>
+            </div>
+            <div class="sub-panel" id="adminAuditPanel">
+              <div class="sub-panel-title">Recent audit events</div>
+              <div id="adminAudit" class="admin-list"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- MODAL: API DOCUMENTATION -->
+  <div class="modal-overlay hidden" id="modalApiDocs">
+    <div class="modal-dialog" style="max-width:760px;">
+      <div class="modal-header">
+        <h3 class="modal-title">ArchXpay API documentation</h3>
+        <button type="button" class="modal-close" id="btnCloseApiDocs">&times;</button>
+      </div>
+      <div style="display:grid;gap:16px;">
+        <div class="sub-panel">
+          <div class="sub-panel-title">1. Create a checkout</div>
+          <p class="panel-sub">Send your approved API key and a positive INR amount. ArchXpay creates a unique payment link and dynamic UPI QR.</p>
+          <pre class="code-block"><code>POST /api/v1/checkout/create
+x-api-key: YOUR_API_KEY
+Content-Type: application/json
+
+{"amount":500,"customerName":"Customer","customerEmail":"customer@example.com","note":"Order 123"}</code></pre>
+        </div>
+        <div class="sub-panel">
+          <div class="sub-panel-title">2. Check verification status</div>
+          <p class="panel-sub">Poll the order status or open the returned <code>checkoutUrl</code>. The status becomes <code>PAID</code> only after the configured Gmail watcher matches a bank alert to the exact amount and reference.</p>
+          <pre class="code-block"><code>GET /api/v1/checkout/status/PAY-ORDER-ID
+
+{"success":true,"verified":true,"order":{"status":"PAID"}}</code></pre>
+        </div>
+        <div class="sub-panel">
+          <div class="sub-panel-title">3. Gmail auto-verification</div>
+          <p class="panel-sub">Enter the receiving Gmail account and Google 16-character App Password in merchant onboarding. Enable Gmail IMAP and 2-Step Verification in your Google account. App Passwords are used only by the server-side IMAP verifier.</p>
+        </div>
+        <div class="sub-panel">
+          <div class="sub-panel-title">Security and approval</div>
+          <p class="panel-sub">API keys are issued only after administrator approval. Keep keys server-side, use HTTPS in production, and do not treat a manually entered UTR as proof by itself. Bank-authoritative settlement confirmation remains your responsibility.</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-dash-primary" id="btnDoneApiDocs">Close documentation</button>
+      </div>
+    </div>
   </div>
 
   <!-- MODAL: CREATE PAYWALL LINK -->
@@ -816,6 +984,7 @@
 
   <div class="toast-container" id="toastContainer"></div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/app.js"></script>
 </body>
 </html>

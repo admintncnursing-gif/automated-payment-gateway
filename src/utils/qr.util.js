@@ -9,7 +9,7 @@ const QRCode = require('qrcode');
  * Constructs an NPCI-compliant UPI Intent URI
  * 
  * @param {Object} params
- * @param {string} params.upiVpa - Payee UPI ID (e.g. 8789601387@fam). The '@' symbol MUST remain raw!
+ * @param {string} params.upiVpa - Merchant UPI ID. The '@' symbol MUST remain raw!
  * @param {string} params.merchantName - Payee Business / Merchant Name
  * @param {number|string} params.amount - Transaction Amount
  * @param {string} params.orderCode - Unique Order Identifier (e.g. ORD-XXXXXX or PAY-XXXXXX)
@@ -18,17 +18,24 @@ const QRCode = require('qrcode');
  */
 function buildUpiUri({ upiVpa, merchantName, amount, orderCode, note }) {
   // 1. Payee VPA / UPI ID: Crucial - do NOT percent-encode '@' into '%40'!
-  const cleanVpa = (upiVpa || '8789601387@fam').trim();
+  const cleanVpa = String(upiVpa || '').trim();
+  if (!/^[^@\s]+@[^@\s]+$/.test(cleanVpa)) {
+    throw new Error('A valid merchant UPI ID is required to create a payment request.');
+  }
 
   // 2. Payee Merchant Name: Format and sanitize (& replaced with and, stripped of disallowed chars)
-  const sanitizedName = (merchantName || 'Apex Cloud and Payments')
+  const sanitizedName = (merchantName || 'Merchant')
     .replace(/&/g, 'and')
     .replace(/[^a-zA-Z0-9 ]/g, '')
     .trim();
   const cleanName = encodeURIComponent(sanitizedName);
 
   // 3. Transaction Amount: Fixed to 2 decimal places
-  const cleanAmount = Number(amount || 1.00).toFixed(2);
+  const numericAmount = Number(amount);
+  if (!Number.isFinite(numericAmount) || numericAmount <= 0 || numericAmount > 9999999999.99) {
+    throw new Error('A valid payment amount is required to create a payment request.');
+  }
+  const cleanAmount = numericAmount.toFixed(2);
 
   // 4. Transaction Reference: Unique order code
   const txnRef = encodeURIComponent(orderCode || `ORD-${Date.now()}`);

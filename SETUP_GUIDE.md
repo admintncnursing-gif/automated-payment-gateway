@@ -1,6 +1,6 @@
-# 📘 AuraPay • Complete Setup & Deployment Guide
+# 📘 ArchXpay • Complete Setup & Deployment Guide
 
-> **0% Transaction Fee Automated UPI Payment Gateway with Instant Bank Alert Auto-Verification, Micro-Paise Anti-Collision Allocation, and 1-Tap Mobile Intent Deep-Links.**
+> **UPI checkout prototype with Google sign-in, merchant application review, API documentation, and Gmail alert matching.**
 
 ---
 
@@ -10,11 +10,11 @@
 2. [Prerequisites Checklist](#2-prerequisites-checklist)
 3. [Step 1: Local Installation & Environment Setup](#3-step-1-local-installation--environment-setup)
 4. [Step 2: Configuring Gmail IMAP & App Password](#4-step-2-configuring-gmail-imap--app-password)
-5. [Step 3: Setting Up MongoDB Atlas Database](#5-step-3-setting-up-mongodb-atlas-database)
+5. [Step 3: Setting Up Supabase](#5-step-3-setting-up-supabase)
 6. [Step 4: Running Locally & Testing](#6-step-4-running-locally--testing)
-7. [Step 5: Deploying Backend to Appwrite Cloud](#7-step-5-deploying-backend-to-appwrite-cloud)
-8. [Step 6: Deploying Paywall Frontend to Vercel](#8-step-6-deploying-paywall-frontend-to-vercel)
-9. [Step 7: Production Daemon with PM2 or Docker](#9-step-7-production-daemon-with-pm2-or-docker)
+7. [Step 5: Optional Supabase Edge Checkout API](#7-step-5-optional-supabase-edge-checkout-api)
+8. [Step 6: Deploying the complete portal](#8-step-6-deploying-the-complete-portal)
+9. [Step 7: Keep the Node server running](#9-step-7-keep-the-node-server-running)
 10. [Architecture Details: Intent Schemes & Concurrency](#10-architecture-details-intent-schemes--concurrency)
 11. [Troubleshooting & FAQ](#11-troubleshooting--faq)
 
@@ -22,7 +22,7 @@
 
 ## 1. System Overview & Architecture
 
-AuraPay allows developers, business owners, and creators to accept direct peer-to-peer (P2P) and merchant UPI payments with zero payment gateway fees. All payments go straight into your own UPI account.
+ArchXpay creates UPI payment requests and matches configured Gmail alerts to orders. Email matching is not equivalent to bank-authoritative payment confirmation or a regulated payment processor. Verify legal, banking, privacy, and security requirements before accepting real payments.
 
 ### Verification Flow
 
@@ -39,7 +39,7 @@ AuraPay allows developers, business owners, and creators to accept direct peer-t
 [Bank sends Transaction Alert Email to your Gmail inbox]
        │
        ▼
-[AuraPay IMAP Daemon catches TCP socket alert in <100ms]
+[ArchXpay IMAP daemon detects the merchant's configured Gmail alert]
        │
        ▼
 [Regex extracts exact Amount, UTR, and TxnId -> Marks Order 'PAID']
@@ -54,10 +54,10 @@ AuraPay allows developers, business owners, and creators to accept direct peer-t
 
 Ensure you have the following before starting:
 
-- [x] **Node.js**: v18.0.0 or higher installed (`node -v`)
+- [x] **Node.js**: v22.0.0 or higher installed (`node -v`)
 - [x] **NPM**: v9.0.0 or higher (`npm -v`)
 - [x] **Gmail Account**: With **2-Step Verification** turned on (for generating an App Password).
-- [x] **MongoDB Atlas Account**: Free Tier (M0) or a local MongoDB database instance.
+- [x] **Supabase Project**: with both checked-in migrations applied and Google Auth enabled.
 - [x] **UPI Handle**: Your personal or business UPI ID (e.g., `yourname@fam`, `yourname@okhdfcbank`, `yournumber@paytm`).
 
 ---
@@ -74,14 +74,7 @@ Ensure you have the following before starting:
    npm install
    ```
 
-3. **Install Appwrite Cloud Function Dependencies**:
-   ```bash
-   cd functions/payment-gateway
-   npm install
-   cd ../..
-   ```
-
-4. **Create your `.env` file**:
+3. **Create your `.env` file**:
    Copy `.env.example` to `.env`:
    ```bash
    # Windows PowerShell:
@@ -95,39 +88,36 @@ Ensure you have the following before starting:
 
 ## 4. Step 2: Configuring Gmail IMAP & App Password
 
-To enable AuraPay's daemon to detect bank credit alerts in real time:
+To enable ArchXpay's daemon to detect bank credit alerts in real time:
 
 1. Log into your Google Account at [myaccount.google.com](https://myaccount.google.com/).
 2. Navigate to **Security** and confirm that **2-Step Verification** is **ON**.
 3. Go directly to **App Passwords**: [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords).
-4. Enter an App Name (e.g., `AuraPay Daemon`) and click **Create**.
+4. Enter an App Name (e.g., `ArchXpay Daemon`) and click **Create**.
 5. Copy the generated **16-character password** (format: `xxxx xxxx xxxx xxxx`).
 6. Enable IMAP in Gmail Settings:
    - Go to [mail.google.com](https://mail.google.com) > Click the **Gear icon** (Settings) > **See all settings**.
    - Open the **Forwarding and POP/IMAP** tab.
    - Select **Enable IMAP** and click **Save Changes**.
 
-Add these credentials to your `.env` file:
-```env
-GMAIL_USER=your-email@gmail.com
-GMAIL_APP_PASS=your16charpassword
-```
+Enter the Gmail address and App Password on the merchant application form. The password is encrypted by the Node server before it is stored in Supabase; it is not a global `.env` value.
 
 ---
 
-## 5. Step 3: Setting Up MongoDB Atlas Database
+## 5. Step 3: Setting Up Supabase
 
-1. Sign up or log into [MongoDB Atlas](https://www.mongodb.com/atlas).
-2. Create a free shared cluster (M0 sandbox).
-3. Under **Database Access**, create a user (e.g., `aurapay_user`) with read and write permissions.
-4. Under **Network Access**, add IP `0.0.0.0/0` (Allow access from anywhere) so cloud functions and your local daemon can connect.
-5. Click **Connect** > **Drivers** (Node.js) and copy the connection string.
-6. Replace `<password>` with your database user password and specify `/aurapay` as the database name.
+1. Create or open your project at [Supabase](https://supabase.com/).
+2. In **Project Settings > API**, copy the project URL, anon key, and service-role key.
+3. Configure Google as an Auth provider and set the site's URL plus the local/deployed callback URL in Supabase Auth URL settings.
+4. Add the values to the Node server's `.env`. Never put the service-role key in browser code or commit it. Merchant Gmail App Passwords entered in the dashboard are encrypted with server-side secrets.
+5. Sign in to the Supabase CLI locally, link this project, and apply all checked-in migrations:
+   ```bash
+   npx supabase login
+   npx supabase link --project-ref your-project-id
+   npx supabase db push
+   ```
 
-Add it to your `.env` file:
-```env
-MONGODB_URI=mongodb+srv://aurapay_user:your_password@cluster0.xxxxx.mongodb.net/aurapay?retryWrites=true&w=majority
-```
+The CLI uses a Supabase personal access token for project management; it is not a database key. The migration makes `shashanksv2009@gmail.com` the super admin when that Google account authenticates. Rotate any service-role key that was exposed in a file or commit.
 
 ---
 
@@ -138,23 +128,9 @@ MONGODB_URI=mongodb+srv://aurapay_user:your_password@cluster0.xxxxx.mongodb.net/
 Your `.env` file should look like this:
 ```env
 PORT=3000
-
-# Merchant Display Information
-PAYEE_NAME=Monu Kumar
-BUSINESS_NAME=Apex Cloud & Payments
-UPI_ID=8789601387@fam
-
-# Gmail IMAP Auto-Verification
-GMAIL_USER=your-email@gmail.com
-GMAIL_APP_PASS=your-16-char-app-pass
-
-# Database
-MONGODB_URI=mongodb+srv://aurapay_user:your_password@cluster0.xxxxx.mongodb.net/aurapay?retryWrites=true&w=majority
-
-# Appwrite Cloud (Optional - only required if syncing to Appwrite)
-APPWRITE_ENDPOINT=https://sgp.cloud.appwrite.io/v1
-APPWRITE_PROJECT_ID=your_project_id
-APPWRITE_API_KEY=your_api_key
+SUPABASE_URL=https://your-project-id.supabase.co
+SUPABASE_ANON_KEY=your-supabase-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
 ```
 
 ### Start the Server
@@ -168,86 +144,47 @@ npm run dev
 You should see:
 ```text
 ====================================================
-🚀 AuraPay Platform running at: http://localhost:3000
-💼 Active Merchant: Apex Cloud & Payments
-📧 Monitoring Email: your-email@gmail.com
+🚀 ArchXpay Platform running at: http://localhost:3000
+🔐 Supabase Auth merchant onboarding and review enabled
 ====================================================
 ```
 
 ### Accessing the Interfaces
 
-- **Merchant Dashboard**: Open [http://localhost:3000](http://localhost:3000)
-- **New Dynamic Checkout**: Open [http://localhost:3000/pay/new](http://localhost:3000/pay/new)
-
-### Simulating a Payment
-
-You can test instant auto-verification without transferring real money using the simulation endpoint:
-
-```bash
-curl -X POST http://localhost:3000/api/v1/simulate-payment \
-  -H "Content-Type: application/json" \
-  -d '{"amount": 1.00, "payerName": "Test Customer", "utr": "123456789012"}'
-```
-The active paywall window will immediately update to green and display the success receipt.
+- **Merchant portal**: Open [http://localhost:3000](http://localhost:3000), sign in with Google, and submit the merchant application.
+- **Admin portal**: Sign in as `shashanksv2009@gmail.com` to review applications and manage roles, permissions, flags, maintenance mode, and logs.
+- **Payment APIs**: Available only after a merchant application is approved.
 
 ---
 
-## 7. Step 5: Deploying Backend to Appwrite Cloud
+## 7. Step 5: Optional Supabase Edge Checkout API
 
-If you want a serverless cloud API for creating checkout orders:
-
-1. Install Appwrite CLI or run via npx:
+1. Sign in to the Supabase CLI. It will prompt for your personal access token locally:
    ```bash
-   npx appwrite login
+   npx supabase login
    ```
-2. Verify `appwrite.json` has your Project ID:
-   ```json
-   {
-     "projectId": "YOUR_APPWRITE_PROJECT_ID",
-     "projectName": "AuraPay Gateway",
-     "functions": [ ... ]
-   }
-   ```
-3. Deploy the function to Appwrite Cloud:
+2. Link this checkout to the project reference from your Supabase URL and push the schema migration:
    ```bash
-   npx -p appwrite-cli appwrite push functions --all --force
+   npx supabase link --project-ref your-project-id
+   npx supabase db push
    ```
-4. In your [Appwrite Cloud Console](https://cloud.appwrite.io):
-   - Go to **Functions** > **payment-gateway** > **Settings** > **Variables**.
-   - Add the environment variable:
-     - `MONGODB_URI`: your full MongoDB connection string.
+3. Deploy the public checkout API if you need it separately from the Express server:
+   ```bash
+   npx supabase functions deploy payment-gateway --no-verify-jwt
+   ```
+4. The Edge Function supports public checkout endpoints only. The authenticated merchant/admin portal and persistent Gmail IMAP watcher require the Node server.
 
 ---
 
-## 8. Step 6: Deploying Paywall Frontend to Vercel
+## 8. Step 6: Deploying the complete portal
 
-The `public/` directory contains the complete standalone static frontend:
-
-1. Install Vercel CLI or deploy via npx:
-   ```bash
-   npx vercel login
-   ```
-2. Deploy the `public` directory to production:
-   ```bash
-   npx -y vercel deploy public --prod
-   ```
-3. Update `public/vercel.json` if using a custom backend domain:
-   ```json
-   {
-     "cleanUrls": true,
-     "rewrites": [
-       { "source": "/pay/:path*", "destination": "/paywall" },
-       { "source": "/checkout/:path*", "destination": "/paywall" },
-       { "source": "/api/:match*", "destination": "https://YOUR_BACKEND_OR_APPWRITE_URL/api/:match*" }
-     ]
-   }
-   ```
+Deploy the full repository to a persistent Node.js host such as Railway, Render, or a VPS. Configure the environment variables from Step 4, run `npm ci`, then `npm start`. Do not deploy only the `public/` folder as a static site: the portal depends on authenticated Express APIs and the persistent Node IMAP process. Configure Supabase's OAuth redirect allowlist for the deployed origin.
 
 ---
 
-## 9. Step 7: Production Daemon with PM2 or Docker
+## 9. Step 7: Keep the Node server running
 
-Because bank alert emails arrive asynchronously, the IMAP socket daemon (`server.js`) needs to remain continuously active.
+The Express application also runs the Gmail IMAP watcher, so it must stay continuously active.
 
 ### Option A: Using PM2 (Recommended for VPS / Cloud Server)
 
@@ -255,9 +192,9 @@ Because bank alert emails arrive asynchronously, the IMAP socket daemon (`server
    ```bash
    npm install -g pm2
    ```
-2. Start AuraPay:
+2. Start ArchXpay:
    ```bash
-   pm2 start server.js --name aurapay
+   pm2 start server.js --name archxpay
    ```
 3. Enable auto-restart on system reboot:
    ```bash
@@ -266,14 +203,14 @@ Because bank alert emails arrive asynchronously, the IMAP socket daemon (`server
    ```
 4. View real-time logs:
    ```bash
-   pm2 logs aurapay
+   pm2 logs archxpay
    ```
 
 ### Option B: Using Docker
 
 Create a `Dockerfile`:
 ```dockerfile
-FROM node:20-alpine
+FROM node:22-alpine
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci --only=production
@@ -283,8 +220,8 @@ CMD ["node", "server.js"]
 ```
 Build and run:
 ```bash
-docker build -t aurapay .
-docker run -d --restart always --name aurapay-gateway -p 3000:3000 --env-file .env aurapay
+docker build -t archxpay .
+docker run -d --restart always --name archxpay-gateway -p 3000:3000 --env-file .env archxpay
 ```
 
 ---
@@ -313,7 +250,7 @@ When 2 or more customers pay concurrently, the engine queries active pending ord
 - User A: ₹1.00
 - User B: ₹1.01
 - User C: ₹1.02
-When the bank email arrives stating `"₹1.01 received"`, AuraPay verifies **only** User B's order. User A and User C remain safely isolated.
+When the bank email arrives stating `"₹1.01 received"`, ArchXpay prepares verification for **only** User B's order. User A and User C remain safely isolated.
 
 ---
 
@@ -322,14 +259,14 @@ When the bank email arrives stating `"₹1.01 received"`, AuraPay verifies **onl
 | Problem | Cause | Solution |
 | :--- | :--- | :--- |
 | **`[IMAP] Authentication failed`** | Incorrect Gmail credentials or 2FA issue | Ensure 2-Step Verification is ON and you are using a 16-character **Google App Password**, not your normal Gmail password. |
-| **`Invalid scheme: expected mongodb://`** | Missing or malformed `MONGODB_URI` | Confirm `MONGODB_URI` in `.env` or Appwrite console starts with `mongodb+srv://` and contains no unescaped special characters in the password. |
-| **PhonePe shows "Payment not allowed"** | Percent-encoded `@` (`%40`) or missing mode | AuraPay explicitly leaves `@` unencoded and adds `mode=00`. Verify you are running the latest `src/utils/qr.util.js`. |
-| **Payments not auto-verifying** | Bank alert email not delivered to Gmail | Verify that your bank/UPI app sends transaction alerts to your configured `GMAIL_USER`. Check Spam folder. |
-| **Paywall shows static ₹1.00 instead of dynamic order** | Missing order ID in URL | Open `/pay/new` or pass a valid order code `/pay/:orderId` to generate a dynamic anti-collision order. |
+| **Supabase connection or missing-table errors** | Missing environment variables or schema | Confirm `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY`, then run `npx supabase db push`. |
+| **PhonePe shows "Payment not allowed"** | Percent-encoded `@` (`%40`) or missing mode | ArchXpay explicitly leaves `@` unencoded and adds `mode=00`. Verify you are running the latest `src/utils/qr.util.js`. |
+| **Payments not auto-verifying** | Bank alert email not delivered to Gmail | Verify that the merchant's configured Gmail receives the alert and that IMAP/App Password access remains enabled. |
+| **Paywall shows an unavailable order** | Missing or unapproved order | Open a valid `/pay/:orderId` link generated for an approved merchant. |
 
 ---
 
 <div align="center">
-  <b>AuraPay • Built for Fast, Zero-Fee Indian UPI Payments</b><br>
+  <b>ArchXpay • UPI checkout platform</b><br>
   Open Source under the MIT License.
 </div>

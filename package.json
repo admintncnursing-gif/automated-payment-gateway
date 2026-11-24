@@ -1,16 +1,17 @@
 {
-  "name": "automated-payment-gateway",
+  "name": "archxpay",
   "version": "1.0.0",
-  "description": "Zero-fee, automated real-time UPI payment gateway with dynamic QR code generation, micro-paise anti-collision allocation, and instant bank alert auto-verification.",
+  "description": "Merchant-reviewed automated UPI payment gateway with dynamic QR checkout, Gmail auto-verification, API access, and Supabase administration.",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "test": "echo \"All test suites passed.\" && exit 0"
+    "build": "node scripts/build-cloudflare.js",
+    "test": "node --test"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/monu564100/automated-payment-gateway.git"
+    "url": "https://github.com/admintncnursing-gif/automated-payment-gateway"
   },
   "keywords": [
     "upi",
@@ -26,9 +27,9 @@
     "fintech",
     "zero-fee"
   ],
-  "author": "Monu Kumar <huntkum@gmail.com>",
   "license": "MIT",
   "dependencies": {
+    "@supabase/supabase-js": "^2.119.2",
     "cors": "^2.8.6",
     "dotenv": "^18.0.10",
     "express": "^5.3.0",
@@ -36,7 +37,6 @@
     "jimp": "^1.6.1",
     "jsqr": "^1.4.0",
     "mailparser": "^3.14.3",
-    "mongoose": "^9.12.1",
     "multer": "^2.5.0",
     "qrcode": "^1.5.4"
   }

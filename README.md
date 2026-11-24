@@ -1,14 +1,13 @@
 <div align="center">
 
-# ⚡ AuraPay • Automated UPI Payment Gateway
+# ⚡ ArchXpay • Automated UPI Payment Gateway
 
-**A production-ready, open-source, 0%-fee automated UPI payment gateway with dynamic QR generation, micro-paise anti-collision allocation, and sub-second bank alert auto-verification.**
+**An open-source UPI checkout prototype with dynamic QR generation and Gmail alert-based payment matching.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
-[![Node.js](https://img.shields.io/badge/Node.js-v20+-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-v22+-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
 [![Express.js](https://img.shields.io/badge/Express.js-5.x-000000?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com/)
-[![MongoDB Atlas](https://img.shields.io/badge/MongoDB-Atlas-47A248?style=for-the-badge&logo=mongodb&logoColor=white)](https://www.mongodb.com/atlas)
-[![Appwrite](https://img.shields.io/badge/Appwrite-Cloud-FD366E?style=for-the-badge&logo=appwrite&logoColor=white)](https://appwrite.io/)
+[![Supabase](https://img.shields.io/badge/Supabase-Edge%20Functions-3FCF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com/)
 [![Vercel](https://img.shields.io/badge/Vercel-Deployment-black?style=for-the-badge&logo=vercel&logoColor=white)](https://vercel.com/)
 
 [Live Demo](https://public-zeta-cyan-79.vercel.app) • [Architecture](#-architecture--lifecycle) • [Quick Start](#-quick-start) • [API Reference](#-api-reference) • [Deployment](#-cloud-deployment)
@@ -19,14 +18,18 @@
 
 ## 📖 Overview
 
-Most payment aggregators charge **2% to 3% transaction fees** and require formal corporate merchant onboarding with extensive verification delays. 
+ArchXpay is a merchant-gateway platform that creates UPI payment requests, applies administrator approval, and uses configured Gmail alerts for order verification.
 
-**AuraPay** is a high-performance, self-hosted, peer-to-peer (P2P) automated UPI gateway. It allows businesses, developers, and creators to accept direct UPI payments into their personal or business UPI handles (FamApp, PhonePe, Paytm, Google Pay, BHIM) with:
+* **Merchant onboarding**: Google sign-in, merchant application, manual review, and approved-only API access.
+* **Developer portal**: Merchant metrics, API credentials, integration examples, and order history.
+* **Super-admin console**: Application and staff management, permission sets, audit events, feature flags, and maintenance mode.
+* **Checkout tools**: Dynamic QR requests and collision-reducing amount allocation.
 
-* **0% Transaction Fees**: 100% of customer funds settle instantly into your own UPI account.
-* **Instant Auto-Verification**: Uses a persistent IMAP socket with Gmail push notification triggers to parse incoming bank credit alerts within **~100ms**.
-* **Micro-Paise Concurrency Engine**: Solves multi-user payment collisions mathematically by allocating unique micro-offsets (e.g. ₹1.00, ₹1.01, ₹1.02) during simultaneous checkouts.
-* **Modern Focused Paywall**: Clean, responsive checkout screen featuring animated dynamic QR codes, 1-click UPI ID copy, and live pulsating status radar.
+> **Important:** UPI QR requests and Gmail alert matching are not equivalent to bank-authoritative payment webhooks or regulated payment processing. Email delivery and verification timing are provider-dependent. Confirm applicable legal, banking, privacy, and security requirements before handling real payments.
+
+## Merchant review and roles
+
+Users authenticate with Google through Supabase Auth. New merchants submit their phone number, business/payee details, UPI ID, target app/site and website URL, and Gmail IMAP configuration. Applications remain pending until an administrator marks them under review, approves, or denies them. Only approved applications receive a live API key. The account `shashanksv2009@gmail.com` is bootstrapped as super admin by the database migration; regular admins receive explicit permissions.
 
 ---
 
@@ -39,8 +42,8 @@ sequenceDiagram
     autonumber
     actor Customer as Customer
     participant Frontend as Paywall UI (Vercel)
-    participant Cloud as Gateway API (Appwrite/Express)
-    participant DB as MongoDB Atlas
+    participant Cloud as Gateway API (Supabase Edge Function / Express)
+    participant DB as Supabase
     actor UPI as Bank / UPI App
     participant Watcher as IMAP Watcher Daemon
 
@@ -65,7 +68,7 @@ sequenceDiagram
 ## ✨ Key Features
 
 ### 1. 🛡️ Mathematical Anti-Collision Engine
-When multiple users initiate checkouts for identical amounts at the same moment, traditional UPI P2P gateways cannot distinguish which user paid. AuraPay solves this through dynamic **Micro-Paise Concurrency Slots**:
+When multiple users initiate checkouts for identical amounts at the same moment, traditional UPI P2P gateways cannot distinguish which user paid. ArchXpay solves this through dynamic **Micro-Paise Concurrency Slots**:
 * **User 1**: Allocated ₹1.00 (`tr=PAY111`)
 * **User 2**: Allocated ₹1.01 (`tr=PAY222`)
 * **User 3**: Allocated ₹1.02 (`tr=PAY333`)
@@ -93,16 +96,10 @@ When User 1 pays ₹1.00, only User 1 receives verification. User 2's screen rem
 
 ```
 ├── .env.example                # Environment variables template
-├── appwrite.json               # Appwrite Cloud Functions configuration
 ├── package.json                # Project dependencies and npm scripts
 ├── server.js                   # Express master server & local runtime
 ├── vercel.json                 # Vercel deployment & API rewrites configuration
 ├── data/                       # Local data directory
-├── functions/
-│   └── payment-gateway/        # Serverless Appwrite Cloud Function
-│       ├── package.json
-│       └── src/
-│           └── main.js         # Stateless cloud gateway controller
 ├── public/                     # Frontend client assets
 │   ├── app.js                  # Merchant onboarding & dashboard logic
 │   ├── index.html              # Landing page & merchant dashboard
@@ -115,10 +112,16 @@ When User 1 pays ₹1.00, only User 1 receives verification. User 2's screen rem
 ├── services/
 │   ├── concurrencyWatcher.js   # IMAP daemon & real-time matching engine
 │   ├── emailMonitor.js         # Fallback periodic email reader
-│   ├── mongo.js                # Mongoose connection & schemas
+│   ├── supabase.js             # Supabase connection & persistence helpers
 │   ├── paymentParser.js        # Bank alert regex extractor (UTR, Amount)
 │   ├── qrHelper.js             # Dynamic NPCI UPI URI & QR generator
-│   └── store.js                # Dual local & MongoDB persistence layer
+│   └── store.js                # Dual local & Supabase persistence layer
+├── supabase/
+│   ├── config.toml             # Supabase local and function settings
+│   ├── functions/
+│   │   └── payment-gateway/
+│   │       └── index.ts        # Supabase Edge API
+│   └── migrations/             # Database schema migrations
 ├── src/
 │   └── utils/
 │       └── qr.util.js          # Core NPCI URI builder & QR generator
@@ -130,13 +133,14 @@ When User 1 pays ₹1.00, only User 1 receives verification. User 2's screen rem
 ## 🚀 Quick Start
 
 ### Prerequisites
-* **Node.js**: v18.0.0 or higher
-* **MongoDB**: A free MongoDB Atlas cluster or local MongoDB instance
-* **Gmail Account**: With an [App Password](https://myaccount.google.com/apppasswords) enabled (requires 2-Step Verification)
+* **Node.js**: v22.0.0 or higher
+* **Supabase**: A project linked with the CLI and all migrations in [`supabase/migrations/`](./supabase/migrations/) applied
+* **Google Auth**: Google provider enabled in Supabase Auth with valid redirect URLs
+* **Gmail Account**: Each merchant uses a dedicated Gmail [App Password](https://myaccount.google.com/apppasswords) (requires 2-Step Verification)
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/monu564100/automated-payment-gateway.git
+git clone https://github.com/admintncnursing-gif/automated-payment-gateway.git
 cd automated-payment-gateway
 ```
 
@@ -153,15 +157,14 @@ cp .env.example .env
 Fill in your configuration:
 ```env
 PORT=3000
-PAYEE_NAME="Your Name"
-UPI_ID="yourhandle@fam"
-BUSINESS_NAME="Apex Cloud & Payments"
-
-GMAIL_USER="your-email@gmail.com"
-GMAIL_APP_PASS="your-16-char-app-password"
-
-MONGODB_URI="mongodb+srv://<username>:<password>@cluster.mongodb.net/aurapay?retryWrites=true&w=majority"
+SUPABASE_URL="https://your-project-id.supabase.co"
+SUPABASE_ANON_KEY="your-supabase-anon-key"
+SUPABASE_SERVICE_ROLE_KEY="your-supabase-service-role-key"
 ```
+
+Apply the migrations in `supabase/migrations/`, enable Google as a provider in Supabase Auth, and add your local/deployed site URL to Supabase's allowed redirect URLs. Merchant Gmail App Passwords are entered in the dashboard application and stored encrypted; do not configure a global Gmail password.
+
+The migration promotes `shashanksv2009@gmail.com` to super admin when that Google account signs in. Treat the service-role key as a server secret only. The `.env.example` value was removed; rotate any key that was previously shared or committed.
 
 ### 4. Start the Server
 ```bash
@@ -172,29 +175,29 @@ npm start
 npm run dev
 ```
 
-Visit `http://localhost:3000` to access the Merchant Portal, or open `http://localhost:3000/pay/new` to create a live test payment.
+Visit `http://localhost:3000` to access the Merchant Portal. Sign in with Google and submit a merchant application; payment APIs stay disabled until an admin approves it.
 
 ---
 
-## 🌐 Cloud Deployment
+## 🌐 Deployment
 
-AuraPay is architected for hybrid or split deployment:
+The merchant portal, approval workflow, and IMAP watcher require the Express server. Deploy the full repository to a persistent Node.js host (for example, a VPS, Railway, or Render) rather than deploying only `public/` as a static site. Configure the environment variables above on that server and run:
 
-### 1. Frontend on Vercel
-Deploy the `public/` directory directly to Vercel:
 ```bash
-npx vercel deploy public --prod
-```
-The included `vercel.json` automatically configures clean URLs and proxies `/api/*` routes to your backend service.
-
-### 2. Serverless API on Appwrite Functions
-The `functions/payment-gateway` directory contains the complete serverless function for Appwrite Cloud:
-```bash
-npx -p appwrite-cli appwrite push functions --all --force
+npm ci
+npm start
 ```
 
-### 3. Background Daemon (IMAP Socket)
-Run `node server.js` on any persistent Node.js environment (Railway, Render, VPS, or Docker) to maintain the live IMAP connection with Gmail.
+Keep the Node service and its Gmail credential encryption key available continuously. Set Supabase Auth's site URL and redirect allowlist to the deployed origin. Do not expose the Supabase service-role key in the browser or a static build.
+
+The optional Supabase Edge Function provides public checkout endpoints, not the authenticated merchant/admin portal. To use it independently:
+```bash
+npx supabase login
+npx supabase link --project-ref your-project-id
+npx supabase db push
+npx supabase functions deploy payment-gateway --no-verify-jwt
+```
+The CLI asks for a Supabase personal access token for local project management. The Edge Function uses Supabase's server-side secret; never place it in a static frontend.
 
 ---
 
@@ -204,7 +207,7 @@ Run `node server.js` on any persistent Node.js environment (Railway, Render, VPS
 Generates a unique dynamic order with anti-collision amount and dynamic QR code.
 
 * **Endpoint**: `POST /api/v1/checkout/create`
-* **Headers**: `Content-Type: application/json`
+* **Headers**: `x-api-key: <approved-merchant-api-key>`, `Content-Type: application/json`
 
 **Request Body:**
 ```json
@@ -224,8 +227,8 @@ Generates a unique dynamic order with anti-collision amount and dynamic QR code.
   "amount": 10.00,
   "currency": "INR",
   "status": "PENDING",
-  "paywallUrl": "/pay/PAY-898968-338",
-  "dynamicUpiUrl": "upi://pay?pa=yourhandle@fam&pn=Apex%20Cloud&am=10.00&cu=INR&tn=PAY898968338&tr=PAY898968338",
+  "checkoutUrl": "https://your-gateway.example/pay/PAY-898968-338",
+  "dynamicUpiUrl": "upi://pay?pa=yourupi@fam&pn=Your%20Business&am=10.00&cu=INR&tn=PAY898968338&tr=PAY898968338",
   "dynamicQrDataUrl": "data:image/png;base64,iVBORw..."
 }
 ```
@@ -251,7 +254,7 @@ Real-time endpoint called by the checkout paywall to detect verified payments.
       "amount": 10.00,
       "utr": "668612930011",
       "txnId": "FMPIB7007283579",
-      "senderName": "Monu Kumar"
+      "senderName": "Customer"
     }
   }
 }
@@ -260,7 +263,7 @@ Real-time endpoint called by the checkout paywall to detect verified payments.
 ---
 
 ### 3. Manual UTR Verification
-Allows customers to verify their transaction manually by providing their 12-digit bank reference number.
+Lets a customer submit their bank reference number for an exact match against the merchant's parsed Gmail payment alerts. A customer-provided reference alone never marks an order paid. This verification path requires the persistent Node server and configured Gmail IMAP watcher; the optional Edge Function cannot independently verify UTRs.
 
 * **Endpoint**: `POST /api/v1/checkout/verify-utr`
 * **Headers**: `Content-Type: application/json`
@@ -291,7 +294,7 @@ Allows customers to verify their transaction manually by providing their 12-digi
 
 1. **Never commit `.env` or credentials**: Ensure `.env` and `data/store.json` remain in your `.gitignore`.
 2. **App Passwords**: Never use your primary Google account password; always use a dedicated Gmail 16-character App Password.
-3. **Database Rules**: Ensure your MongoDB Atlas cluster IP access list is restricted to your production servers or uses secure VPC peering.
+3. **Database Rules**: Keep the Supabase service-role key server-side only; row-level security is enabled on the application tables.
 
 ---
 
@@ -313,5 +316,5 @@ Distributed under the **MIT License**. See [`LICENSE`](LICENSE) for more informa
 ---
 
 <div align="center">
-  <sub>Engineered with ❤️ by <a href="https://github.com/monu564100">Monu Kumar</a></sub>
+  <sub>Platform <a href="https://www.kira-devs.xyz/" target="_blank" rel="noopener noreferrer">Terms &amp; Information</a></sub>
 </div>

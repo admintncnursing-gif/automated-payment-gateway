@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Secure UPI Checkout • AuraPay</title>
+  <title>Secure UPI Checkout • ArchXpay</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -23,7 +23,7 @@
         <div class="merchant-badge">
           <div class="merchant-logo-mark" id="merchantLogo">A</div>
           <div>
-            <h2 class="merchant-name" id="merchantNameDisplay">Apex Cloud &amp; Payments</h2>
+            <h2 class="merchant-name" id="merchantNameDisplay">Merchant</h2>
             <div class="verified-merchant-tag">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
                 <polyline points="20 6 9 17 4 12"/>
@@ -43,19 +43,18 @@
       <div class="amount-hero">
         <span class="currency-tag">Amount to Pay</span>
         <div class="amount-val" id="amountDisplay">₹0.00</div>
-        <div class="amount-purpose" id="purposeDisplay">Make a payment and get source code of complete payment gateway</div>
+        <div class="amount-purpose" id="purposeDisplay">Secure UPI payment</div>
       </div>
 
-      <!-- Digital Product Highlight Banner -->
       <div class="product-highlight-banner">
         <div class="product-badge">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <polyline points="16 18 22 12 16 6"></polyline>
             <polyline points="8 6 2 12 8 18"></polyline>
           </svg>
-          <span>Instant Download</span>
+          <span>Secure Checkout</span>
         </div>
-        <p class="product-title-text">Make a payment and get source code of complete payment gateway</p>
+        <p class="product-title-text">Pay the merchant directly using UPI.</p>
       </div>
 
       <!-- Dynamic QR & Scanner Showcase -->
@@ -69,7 +68,7 @@
         <!-- Down payment badge below QR -->
         <div class="down-payment-label">
           <span class="live-pulse"></span>
-          <span>SCAN &amp; PAY EXACT AMOUNT • INSTANT SOURCE CODE ACCESS</span>
+          <span>SCAN &amp; PAY THE EXACT AMOUNT</span>
         </div>
       </div>
 
@@ -131,7 +130,7 @@
         <div class="upi-id-bar">
           <div class="upi-text-wrap">
             <span class="upi-sub">Direct Payee UPI ID</span>
-            <span class="upi-address font-mono" id="upiIdDisplay">8789601387@fam</span>
+            <span class="upi-address font-mono" id="upiIdDisplay">Merchant UPI ID</span>
           </div>
           <button type="button" class="btn-copy" id="copyUpiBtn">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -166,7 +165,7 @@
         </div>
         <div class="utr-drawer hidden" id="utrDrawer">
           <div class="utr-input-row">
-            <input type="text" id="manualUtrInput" class="utr-field" placeholder="Enter 12-digit UPI UTR">
+            <input type="text" id="manualUtrInput" class="utr-field" placeholder="Enter UTR or reference number">
             <button type="button" class="btn-verify-utr" id="submitUtrBtn">Verify UTR</button>
           </div>
         </div>
@@ -197,23 +196,6 @@
         <span class="pill-verified">Payment Confirmed &amp; Verified</span>
         <h2 class="success-amt" id="successAmtDisplay">₹0.00</h2>
         <p class="success-sub">Transaction received and validated via merchant bank alert stream.</p>
-      </div>
-
-      <!-- Digital Delivery & Google Drive Download Box -->
-      <div class="delivery-card" id="deliveryCard">
-        <div class="delivery-header">
-          <span class="delivery-badge">PAYMENT VERIFIED • SOURCE CODE UNLOCKED</span>
-          <h3 class="delivery-title">Your Payment Gateway Source Code is Ready!</h3>
-          <p class="delivery-desc">Redirecting to Google Drive download in <span id="redirectCountdown" class="countdown-pill">3s</span>...</p>
-        </div>
-        <a id="btnDownloadDrive" class="btn-download-drive" href="#" target="_blank" rel="noopener noreferrer">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="7 10 12 15 17 10"></polyline>
-            <line x1="12" y1="15" x2="12" y2="3"></line>
-          </svg>
-          <span>Download Complete Source Code (Google Drive)</span>
-        </a>
       </div>
 
       <!-- Receipt Box -->
@@ -260,12 +242,6 @@
             <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
           </svg>
           Check Again
-        </button>
-        <button type="button" class="btn-pay-again" id="btnPayAgain">
-          Pay Again (New ₹199)
-        </button>
-        <button type="button" class="btn-return" id="returnMerchantBtn">
-          Done
         </button>
       </div>
     </div>

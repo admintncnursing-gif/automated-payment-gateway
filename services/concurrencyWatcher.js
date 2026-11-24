@@ -1,7 +1,7 @@
 const { ImapFlow } = require('imapflow');
 const { simpleParser } = require('mailparser');
 const { parsePaymentEmail } = require('./paymentParser');
-const { OrderModel } = require('./mongo');
+const { findPendingOrders, updateOrder } = require('./supabase');
 const store = require('./store');
 
 class ConcurrencyWatcher {
@@ -23,6 +23,7 @@ class ConcurrencyWatcher {
     this.merchantStreams = new Set(); // merchant dashboard SSE listeners
     this.recentPayments = [];
     this.isProcessingQueue = false;
+    this.isDestroyed = false;
   }
 
   createClient() {
@@ -56,6 +57,7 @@ class ConcurrencyWatcher {
   }
 
   async start() {
+    if (this.isDestroyed) return;
     try {
       console.log(`[Watcher:${this.merchantId}] Connecting to IMAP for ${this.user}...`);
       this.client = this.createClient();
@@ -76,7 +78,7 @@ class ConcurrencyWatcher {
     } catch (err) {
       console.error(`[Watcher:${this.merchantId}] Initial connection failed:`, err.message);
       this.isConnected = false;
-      setTimeout(() => this.start(), 3000);
+      if (!this.isDestroyed) setTimeout(() => this.start(), 3000);
     }
   }
 
@@ -182,17 +184,12 @@ class ConcurrencyWatcher {
       return;
     }
 
-    // Direct live query to MongoDB Atlas so orders created from Appwrite/Vercel are immediately visible!
     let pendingOrders = [];
     try {
       const thirtyMinsAgo = new Date(Date.now() - 30 * 60 * 1000);
-      pendingOrders = await OrderModel.find({
-        merchantId: this.merchantId,
-        status: 'PENDING',
-        createdAt: { $gte: thirtyMinsAgo }
-      }).lean();
+      pendingOrders = await findPendingOrders(this.merchantId, thirtyMinsAgo);
     } catch (err) {
-      console.warn('[ConcurrencyEngine] Could not fetch from MongoDB, fallback to local store:', err.message);
+      console.warn('[ConcurrencyEngine] Could not fetch from Supabase, fallback to local store:', err.message);
       pendingOrders = store.getPendingOrdersByMerchant(this.merchantId);
     }
 
@@ -261,20 +258,15 @@ class ConcurrencyWatcher {
   async executeOrderMatch(order, payment, matchType) {
     this.claimPayment(payment, order.orderId);
     
-    // 1. Instantly write to MongoDB Atlas
+    // 1. Persist the payment confirmation to Supabase
     try {
-      await OrderModel.findOneAndUpdate(
-        { orderId: order.orderId },
-        {
-          $set: {
-            status: 'PAID',
-            verifiedAt: new Date(),
-            paymentDetails: payment
-          }
-        }
-      );
+      await updateOrder(order.orderId, {
+        status: 'PAID',
+        verifiedAt: new Date().toISOString(),
+        paymentDetails: payment
+      });
     } catch(err) {
-      console.error('[ConcurrencyEngine] MongoDB Atlas update error:', err.message);
+      console.error('[ConcurrencyEngine] Supabase update error:', err.message);
     }
 
     // 2. Update local store
@@ -282,7 +274,7 @@ class ConcurrencyWatcher {
       status: 'PAID',
       verifiedAt: new Date().toISOString(),
       paymentDetails: payment
-    }) || order;
+    }, false) || order;
 
     console.log(`[ConcurrencyEngine] ✓ ORDER MATCHED [${matchType}]: Order ${order.orderId} (₹${order.amount}) -> UTR ${payment.utr || payment.txnId}`);
 
@@ -355,6 +347,7 @@ class ConcurrencyWatcher {
   }
 
   destroy() {
+    this.isDestroyed = true;
     if (this.pollInterval) clearInterval(this.pollInterval);
     if (this.client) {
       try { this.client.logout(); } catch (e) {}
@@ -387,6 +380,13 @@ class WatcherManager {
 
   get(merchantId) {
     return this.watchers.get(merchantId) || null;
+  }
+
+  remove(merchantId) {
+    const watcher = this.watchers.get(merchantId);
+    if (!watcher) return;
+    watcher.destroy();
+    this.watchers.delete(merchantId);
   }
 }
 

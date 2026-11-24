@@ -1,11 +1,10 @@
 /**
  * Client Logic for Hosted Dynamic Paywall Screen
- * Fully dynamic order creation, instant cache-free verification & re-checking
+ * Merchant-generated payment links, instant cache-free verification & re-checking
  */
 
 document.addEventListener('DOMContentLoaded', () => {
   const pathParts = window.location.pathname.split('/').filter(Boolean);
-  const isTestRoute = window.location.pathname.startsWith('/test') || new URLSearchParams(window.location.search).get('test') === '1';
   let orderId = pathParts[pathParts.length - 1];
 
   let orderData = null;
@@ -13,7 +12,6 @@ document.addEventListener('DOMContentLoaded', () => {
   let timerSeconds = 300;
   let pollTimer = null;
   let countdownTimer = null;
-  let redirectTimer = null;
 
   // DOM Elements
   const paywallCard = document.getElementById('paywallCard');
@@ -34,10 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const submitUtrBtn = document.getElementById('submitUtrBtn');
   const toastBox = document.getElementById('toastBox');
 
-  // Dynamic & Re-check Buttons
-  const btnNewDynamicOrder = document.getElementById('btnNewDynamicOrder');
   const btnRecheckStatus = document.getElementById('btnRecheckStatus');
-  const btnPayAgain = document.getElementById('btnPayAgain');
 
   // Success Elements
   const successAmtDisplay = document.getElementById('successAmtDisplay');
@@ -48,19 +43,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const receiptTxnId = document.getElementById('receiptTxnId');
   const receiptTime = document.getElementById('receiptTime');
   const printReceiptBtn = document.getElementById('printReceiptBtn');
-  const returnMerchantBtn = document.getElementById('returnMerchantBtn');
 
   init();
 
   async function init() {
-    // If order ID is 'new', empty, 'pay', or 'test', automatically create a dynamic checkout!
-    if (!orderId || orderId === 'pay' || orderId === 'new' || orderId === 'test') {
-      const urlParams = new URLSearchParams(window.location.search);
-      const defaultAmt = isTestRoute ? 1.00 : 199.00;
-      const reqAmount = parseFloat(urlParams.get('amount')) || defaultAmt;
-      const customerName = isTestRoute ? 'Test User' : 'Gateway Source Customer';
-      const note = isTestRoute ? 'Payment Gateway Test ₹1.00' : 'Complete Gateway Source Code';
-      await createNewDynamicOrder(reqAmount, customerName, note, isTestRoute);
+    if (!orderId || ['pay', 'new', 'test'].includes(orderId)) {
+      showUnavailable('Open a payment link provided by the merchant.');
       return;
     }
 
@@ -75,10 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       const data = await res.json();
       if (!data.success || !data.order) {
-        showToast('Order not found. Generating new dynamic order...');
-        const defaultAmt = isTestRoute ? 1.00 : 199.00;
-        const note = isTestRoute ? 'Payment Gateway Test ₹1.00' : 'Complete Gateway Source Code';
-        setTimeout(() => createNewDynamicOrder(defaultAmt, 'Customer', note, isTestRoute), 1200);
+        showUnavailable('This payment link is unavailable. Please request a new link from the merchant.');
         return;
       }
 
@@ -94,36 +79,16 @@ document.addEventListener('DOMContentLoaded', () => {
       setupSSE();
       startPolling();
     } catch (e) {
-      showToast('Could not load checkout order');
+      showUnavailable('Could not load this payment link. Please try again later.');
+      return;
     }
 
     setupEvents();
   }
 
-  async function createNewDynamicOrder(amount = 199.00, customerName = 'Gateway Source Customer', note = 'Complete Gateway Source Code', isTest = false) {
-    showToast(`Generating dynamic ₹${amount.toFixed(2)} checkout...`);
-    try {
-      const res = await fetch(`/api/v1/checkout/create?_t=${Date.now()}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Cache-Control': 'no-cache'
-        },
-        body: JSON.stringify({
-          amount: amount,
-          customerName: customerName,
-          note: note
-        })
-      });
-      const data = await res.json();
-      if (data.success && data.orderId) {
-        window.location.href = isTest ? `/test/${data.orderId}` : `/pay/${data.orderId}`;
-        return;
-      }
-      showToast('Failed to create dynamic order');
-    } catch (err) {
-      showToast('Error creating order');
-    }
+  function showUnavailable(message) {
+    paywallCard.innerHTML = `<div class="amount-hero"><h2>Payment link unavailable</h2><p class="amount-purpose">${message}</p></div>`;
+    document.title = 'Payment link unavailable • ArchXpay';
   }
 
   function renderOrder() {
@@ -131,36 +96,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const m = orderData.merchant || {};
 
     orderRefDisplay.textContent = o.orderId || o.orderCode;
-    merchantNameDisplay.textContent = m.businessName || 'Apex Cloud & Payments';
-    merchantLogo.textContent = ((m.businessName || 'Apex')[0] || 'A').toUpperCase();
+    merchantNameDisplay.textContent = m.businessName || 'Merchant';
+    merchantLogo.textContent = ((m.businessName || 'M')[0] || 'M').toUpperCase();
     amountDisplay.textContent = `₹${parseFloat(o.amount).toFixed(2)}`;
 
-    const isTestOrder = isTestRoute || (o.note && o.note.toLowerCase().includes('test')) || (parseFloat(o.amount) <= 5);
-    if (isTestOrder) {
-      purposeDisplay.textContent = o.note || 'UPI System Test Payment • ₹1 Auto-Verification';
-      const productBadge = document.querySelector('.product-badge span');
-      const productTitleText = document.querySelector('.product-title-text');
-      if (productBadge) productBadge.textContent = '⚡ TEST PAYMENT (₹1)';
-      if (productTitleText) productTitleText.textContent = 'Make a ₹1 payment to test live bank credit auto-verification and success screen';
-      const downPaymentSpan = document.querySelector('.down-payment-label span:last-child');
-      if (downPaymentSpan) downPaymentSpan.textContent = 'SCAN & PAY EXACT ₹1 • INSTANT AUTO-VERIFICATION';
-      if (btnPayAgain) btnPayAgain.textContent = 'Test Again (New ₹1)';
-    } else {
-      purposeDisplay.textContent = o.note || 'Make a payment and get source code of complete payment gateway';
-      if (btnPayAgain) btnPayAgain.textContent = 'Pay Again (New ₹199)';
-    }
+    purposeDisplay.textContent = o.note || 'Secure UPI payment';
     
     // Dynamic QR with exact pre-filled amount
     if (o.dynamicQrDataUrl) {
       dynamicQrImg.src = o.dynamicQrDataUrl;
     }
     
-    upiIdDisplay.textContent = m.upiId || '8789601387@fam';
+    upiIdDisplay.textContent = m.upiId || 'Merchant UPI ID';
 
-    // Show PhonePe intent specifically on test route (/test/new or ₹1 test payments)
     const btnPhonePe = document.getElementById('btnPhonePe');
     if (btnPhonePe) {
-      btnPhonePe.style.display = isTestOrder ? 'flex' : 'none';
+      btnPhonePe.style.display = 'flex';
     }
 
     // 1-Tap Mobile Intent Deep-Links configuration
@@ -195,15 +146,15 @@ document.addEventListener('DOMContentLoaded', () => {
       const amtMatch = rawUri.match(/am=([^&]+)/);
       const noteMatch = rawUri.match(/tn=([^&]+)/);
 
-      const cleanVpa = vpaMatch ? vpaMatch[1] : '8789601387@fam';
-      const cleanName = nameMatch ? nameMatch[1] : 'Monu%20Kumar';
-      const cleanAmt = amtMatch ? amtMatch[1] : Number(order.amount || 1.00).toFixed(2);
-      const cleanNote = noteMatch ? noteMatch[1] : 'Test%20Payment';
+      const cleanVpa = vpaMatch?.[1];
+      const cleanName = nameMatch?.[1];
+      const cleanAmt = amtMatch?.[1];
+      const cleanNote = noteMatch?.[1];
 
-      // Pure direct PhonePe deep link with clean pre-filled parameters (no intent wrapper, no mode/tr)
-      const phonePeDeepLink = `phonepe://pay?pa=${cleanVpa}&pn=${cleanName}&am=${cleanAmt}&cu=INR&tn=${cleanNote}`;
-      btnPhonePe.href = phonePeDeepLink;
-      btnPhonePe.onclick = null;
+      if (cleanVpa && cleanName && cleanAmt && cleanNote) {
+        btnPhonePe.href = `phonepe://pay?pa=${cleanVpa}&pn=${cleanName}&am=${cleanAmt}&cu=INR&tn=${cleanNote}`;
+        btnPhonePe.onclick = null;
+      }
     }
     if (btnPaytm) {
       btnPaytm.href = isAndroid
@@ -236,7 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     submitUtrBtn.addEventListener('click', async () => {
       const utr = manualUtrInput.value.trim();
-      if (!utr) return showToast('Enter 12-digit UTR');
+      if (!/^[a-z0-9]{6,30}$/i.test(utr)) return showToast('Enter a valid UTR or reference number.');
 
       submitUtrBtn.disabled = true;
       submitUtrBtn.textContent = 'Checking...';
@@ -261,34 +212,11 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    if (btnNewDynamicOrder) {
-      btnNewDynamicOrder.addEventListener('click', () => {
-        if (isTestRoute) {
-          createNewDynamicOrder(1.00, 'Test User', 'Payment Gateway Test ₹1.00', true);
-        } else {
-          createNewDynamicOrder(199.00, 'Gateway Source Customer', 'Complete Gateway Source Code', false);
-        }
-      });
-    }
-
     if (btnRecheckStatus) {
       btnRecheckStatus.addEventListener('click', () => checkStatusNow(true));
     }
 
-    if (btnPayAgain) {
-      btnPayAgain.addEventListener('click', () => {
-        if (isTestRoute) {
-          createNewDynamicOrder(1.00, 'Test User', 'Payment Gateway Test ₹1.00', true);
-        } else {
-          createNewDynamicOrder(199.00, 'Gateway Source Customer', 'Complete Gateway Source Code', false);
-        }
-      });
-    }
-
     printReceiptBtn.addEventListener('click', () => window.print());
-    returnMerchantBtn.addEventListener('click', () => {
-      window.location.href = `/api/v1/checkout/delivery/${orderId}`;
-    });
   }
 
   function setupSSE() {
@@ -383,7 +311,7 @@ document.addEventListener('DOMContentLoaded', () => {
     successAmtDisplay.textContent = `₹${amt}`;
     receiptOrderId.textContent = order.orderId;
     receiptPayer.textContent = (payment && payment.senderName) || (order && order.customerName) || 'UPI Customer';
-    receiptPayee.textContent = (orderData && orderData.merchant && orderData.merchant.businessName) || 'Apex Cloud & Payments';
+    receiptPayee.textContent = (orderData && orderData.merchant && orderData.merchant.businessName) || 'Merchant';
     receiptUtr.textContent = (payment && payment.utr) || (order.paymentDetails && order.paymentDetails.utr) || 'Confirmed';
     receiptTxnId.textContent = (payment && payment.txnId) || (order.paymentDetails && order.paymentDetails.txnId) || `TXN-${(payment && payment.utr) || Date.now()}`;
     
@@ -392,61 +320,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     paywallCard.classList.add('hidden');
     successCard.classList.remove('hidden');
-    document.title = `✓ Paid ₹${amt} - Confirmed • AuraPay`;
+    document.title = `✓ Paid ₹${amt} - Confirmed • ArchXpay`;
 
-    const isTestOrder = isTestRoute || (order.note && order.note.toLowerCase().includes('test')) || (parseFloat(order.amount) <= 5);
-    if (isTestOrder) {
-      const deliveryBadge = document.querySelector('.delivery-badge');
-      const deliveryTitle = document.querySelector('.delivery-title');
-      const deliveryDesc = document.querySelector('.delivery-desc');
-      const verifiedPill = document.querySelector('.pill-verified');
-      if (verifiedPill) verifiedPill.textContent = '₹1 Test Payment Verified & Confirmed';
-      if (deliveryBadge) deliveryBadge.textContent = 'LIVE SYSTEM TEST PASSED • GATEWAY ACTIVE';
-      if (deliveryTitle) deliveryTitle.textContent = '✅ ₹1 Payment Successfully Verified!';
-      if (deliveryDesc) deliveryDesc.textContent = 'Bank credit alert was received and matched in real-time! Gateway is fully operational.';
-    }
-
-    // Secure Server-Side Delivery & Auto-Redirect (Only accessible after verified payment)
-    const deliveryEndpoint = `/api/v1/checkout/delivery/${order.orderId}`;
-    const downloadEndpoint = `/api/v1/checkout/delivery/${order.orderId}?download=1`;
-
-    const btnDownloadDrive = document.getElementById('btnDownloadDrive');
-    if (btnDownloadDrive) {
-      btnDownloadDrive.href = deliveryEndpoint;
-      btnDownloadDrive.addEventListener('click', () => {
-        triggerDeliveryDownload(downloadEndpoint);
-      });
-    }
-
-    let countdown = 3;
-    const countdownEl = document.getElementById('redirectCountdown');
-    if (redirectTimer) clearInterval(redirectTimer);
-    redirectTimer = setInterval(() => {
-      countdown--;
-      if (countdownEl) {
-        countdownEl.textContent = `${countdown}s`;
-      }
-      if (countdown <= 0) {
-        clearInterval(redirectTimer);
-        // Direct download attempt on phone/browser via verified backend endpoint
-        triggerDeliveryDownload(downloadEndpoint);
-        // Direct redirect via verified backend endpoint
-        window.location.href = deliveryEndpoint;
-      }
-    }, 1000);
-  }
-
-  function triggerDeliveryDownload(url) {
-    try {
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = '';
-      a.target = '_blank';
-      a.rel = 'noopener noreferrer';
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(() => a.remove(), 1000);
-    } catch (e) {}
   }
 
   function playSuccessChime() {
