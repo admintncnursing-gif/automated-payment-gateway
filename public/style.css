@@ -19,6 +19,7 @@
   --emerald-border: #A7F3D0;
   --blue: #2563EB;
   --indigo: #6366F1;
+  --primary: #6366F1;
 
   --font-sans: 'Plus Jakarta Sans', -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
@@ -2073,9 +2074,255 @@ body {
     min-height: 190px;
     padding: 18px;
   }
-
   .application-form .form-row {
     flex-direction: column;
     gap: 0;
+  }
+}
+
+/* -------------------------------------------------------------
+   Cross-device layout safeguards
+   ------------------------------------------------------------- */
+img, video, canvas, svg {
+  max-width: 100%;
+}
+
+pre, code {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.modal-dialog {
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+}
+
+.table-wrap,
+.table-container,
+.panel-header,
+.dash-panel,
+.admin-list,
+.modal-dialog,
+.merchant-wizard-step {
+  max-width: 100%;
+}
+
+.dash-table,
+.comparison-table {
+  min-width: 620px;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+.panel-header,
+.dash-header,
+.application-actions,
+.modal-footer {
+  min-width: 0;
+}
+
+.metric-val,
+.merchant-wizard-step h3,
+.panel-title,
+.dash-title,
+.hero-title,
+.section-title {
+  overflow-wrap: anywhere;
+}
+
+.merchant-wizard-progress {
+  width: 100%;
+  overflow: hidden;
+}
+
+@media (max-width: 820px) {
+  .nav-inner {
+    padding: 10px 16px;
+  }
+  .nav-actions {
+    gap: 6px;
+  }
+  .watcher-live-pill {
+    display: none;
+  }
+  .hero-container {
+    margin-top: 32px;
+  }
+  .faux-window {
+    border-radius: 16px;
+  }
+  .window-body {
+    padding: 16px;
+  }
+  .architecture-container,
+  .comparison-container {
+    margin: 64px auto;
+  }
+  .arch-flow-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .dash-header-actions,
+  .application-actions,
+  .modal-footer {
+    width: 100%;
+  }
+  .dash-header-actions > *,
+  .application-actions > *,
+  .modal-footer > * {
+    flex: 1 1 auto;
+  }
+  .dash-split-grid,
+  .metrics-grid {
+    width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .brand-tag {
+    display: none;
+  }
+  .nav-inner {
+    min-height: 58px;
+  }
+  .nav-actions .btn-nav-secondary,
+  .nav-actions .btn-nav-primary {
+    padding: 7px 9px;
+    font-size: 0.75rem;
+  }
+  .hero-container {
+    padding: 0 14px;
+  }
+  .hero-pill {
+    max-width: 100%;
+    justify-content: center;
+    text-align: left;
+  }
+  .hero-title {
+    font-size: 2rem;
+  }
+  .hero-subtitle {
+    font-size: 0.96rem;
+  }
+  .hero-cta-group {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+  .hero-cta-group > button {
+    width: 100%;
+    justify-content: center;
+  }
+  .section-title {
+    font-size: 1.65rem;
+  }
+  .arch-flow-grid {
+    grid-template-columns: 1fr;
+  }
+  .arch-card {
+    min-width: 0;
+  }
+  .faux-checkout-grid {
+    gap: 18px;
+  }
+  .faux-right,
+  .faux-status-radar,
+  .faux-price-block,
+  .faux-merchant-header {
+    width: 100%;
+  }
+  .faux-qr-card {
+    max-width: 220px;
+    margin: 0 auto;
+  }
+  .dashboard-wrapper,
+  .onboarding-wrapper,
+  .auth-card-wrapper {
+    margin-top: 24px;
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  .application-card,
+  .dash-panel {
+    border-radius: 14px;
+  }
+  .metrics-grid {
+    grid-template-columns: 1fr;
+  }
+  .metric-card {
+    padding: 16px;
+  }
+  .panel-header {
+    align-items: flex-start;
+  }
+  .panel-controls {
+    width: 100%;
+  }
+  .table-search {
+    width: 100%;
+  }
+  .code-block {
+    max-width: 100%;
+  }
+  .modal-overlay {
+    align-items: flex-start;
+    padding: 12px;
+  }
+  .modal-dialog {
+    max-height: calc(100vh - 24px);
+    padding: 18px;
+    margin-top: 0;
+  }
+  .merchant-wizard-line {
+    width: 6px;
+  }
+  .merchant-wizard-dot {
+    flex: 0 0 28px;
+  }
+  .gmail-app-password-guide ol {
+    margin-left: 16px;
+  }
+}
+
+@media (max-width: 420px) {
+  .brand-title {
+    font-size: 1rem;
+  }
+  .brand-logo-icon {
+    width: 32px;
+    height: 32px;
+  }
+  .nav-actions .btn-nav-secondary {
+    display: none;
+  }
+  .nav-actions .btn-nav-primary {
+    max-width: 110px;
+    white-space: normal;
+  }
+  .hero-title {
+    font-size: 1.75rem;
+  }
+  .merchant-wizard-progress {
+    gap: 2px;
+  }
+  .merchant-wizard-dot {
+    width: 26px;
+    height: 26px;
+  }
+  .merchant-wizard-step {
+    padding: 14px;
+  }
+  .application-actions {
+    display: grid;
+  }
+  .application-actions > button {
+    width: 100%;
+  }
+  .dash-header-actions {
+    display: grid;
+  }
+  .dash-header-actions > button {
+    width: 100%;
   }
 }

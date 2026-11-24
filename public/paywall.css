@@ -453,6 +453,39 @@ body {
   }
 }
 
+@media (max-width: 360px) {
+  body {
+    padding: 10px 8px;
+  }
+  .paywall-card,
+  .success-card {
+    padding: 20px 14px;
+  }
+  .dynamic-qr-img {
+    width: 176px;
+    height: 176px;
+  }
+  .amount-val {
+    font-size: 2.2rem;
+  }
+  .card-top {
+    gap: 8px;
+  }
+  .merchant-name {
+    max-width: 150px;
+  }
+  .upi-id-bar {
+    align-items: flex-start;
+  }
+  .radar-status-bar {
+    align-items: flex-start;
+  }
+  .receipt-actions,
+  .intent-apps-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
 /* Radar Status Bar */
 .radar-status-bar {
   display: flex;
