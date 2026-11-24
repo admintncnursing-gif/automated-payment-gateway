@@ -678,6 +678,18 @@ document.addEventListener('DOMContentLoaded', () => {
         toast(error.message);
       }
     });
+    el('btnRemoveMaintenance').addEventListener('click', async () => {
+      if (!window.confirm('Remove maintenance mode and restore normal access?')) return;
+      try {
+        await api('/api/admin/maintenance', { method: 'DELETE' });
+        el('maintenanceEnabled').checked = false;
+        el('maintenanceMessage').value = '';
+        setMaintenance({ enabled: false, message: '' });
+        toast('Maintenance mode removed.');
+      } catch (error) {
+        toast(error.message);
+      }
+    });
     state.supabase.auth.onAuthStateChange((event) => {
       if (['SIGNED_IN', 'TOKEN_REFRESHED', 'INITIAL_SESSION'].includes(event)) {
         refreshIdentity().catch((error) => toast(error.message));

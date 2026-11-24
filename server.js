@@ -786,6 +786,30 @@ app.put('/api/admin/maintenance', requireAuth, requirePermission('settings:manag
   res.json({ success: true, setting: data });
 });
 
+app.delete('/api/admin/maintenance', requireAuth, requirePermission('settings:manage'), async (req, res) => {
+  const client = getClient();
+  const { error } = await client
+    .from('system_settings')
+    .delete()
+    .eq('setting_key', 'maintenance');
+  if (error) throw error;
+  const { error: auditError } = await client.from('audit_logs').insert({
+    actor_user_id: req.authUser.id,
+    action: 'maintenance.removed',
+    target_type: 'system_setting',
+    target_id: 'maintenance',
+    details: { enabled: false }
+  });
+  if (auditError) throw auditError;
+  res.json({
+    success: true,
+    setting: {
+      setting_key: 'maintenance',
+      setting_value: { enabled: false, message: '' }
+    }
+  });
+});
+
 app.get('/api/admin/audit-logs', requireAuth, requirePermission('audit:read'), async (req, res) => {
   const { data, error } = await getClient()
     .from('audit_logs')

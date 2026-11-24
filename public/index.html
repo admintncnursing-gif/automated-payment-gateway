@@ -946,7 +946,10 @@
               <form id="formMaintenance">
                 <div class="form-group"><label><input id="maintenanceEnabled" type="checkbox"> Show maintenance banner and pause merchant APIs</label></div>
                 <div class="form-group"><label class="form-label" for="maintenanceMessage">Banner message</label><input id="maintenanceMessage" class="form-control"></div>
-                <button class="btn-dash-primary" type="submit">Update maintenance mode</button>
+                <div class="application-actions">
+                  <button class="btn-dash-primary" type="submit">Update maintenance mode</button>
+                  <button class="btn-dash-secondary" type="button" id="btnRemoveMaintenance">Remove maintenance</button>
+                </div>
               </form>
             </div>
             <div class="sub-panel" id="adminAuditPanel">
